@@ -34,6 +34,8 @@ body {
     width: 100%;
     max-width: 700px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
 }
 
 h1 {
@@ -188,6 +190,18 @@ button:hover {
 }
 #next-btn:hover {
     background-color: var(--secondary-action-hover);
+}
+
+/* Footer */
+.footer {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.footer p {
+    margin: 0;
 }
 
 /* Media query för mindre skärmar */
