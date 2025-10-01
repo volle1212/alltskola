@@ -7,6 +7,7 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
+    padding: 1rem;
 }
 
 .container {
@@ -23,12 +24,34 @@ h1 {
     color: #1d3557;
 }
 
+/* NYTT: Styling för tempus-väljaren */
+.tempus-val {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+.tempus-val legend {
+    font-weight: bold;
+    padding: 0 0.5rem;
+    color: #457b9d;
+}
+.checkbox-grupp {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .uppgift-container {
     background-color: #a8dadc;
     color: #1d3557;
     padding: 1rem;
     border-radius: 8px;
-    margin: 1.5rem 0;
+    margin-bottom: 1.5rem;
 }
 
 .boejningar-grid {
@@ -39,6 +62,7 @@ h1 {
 }
 
 .form-grupp {
+    position: relative; /* Nödvändig för feedback-positionering */
     display: flex;
     flex-direction: column;
 }
@@ -50,6 +74,7 @@ h1 {
 
 .form-grupp input {
     padding: 0.75rem;
+    padding-right: 2.5rem; /* Ge plats för ikonen */
     border: 2px solid #ccc;
     border-radius: 5px;
     font-size: 1rem;
@@ -61,19 +86,16 @@ h1 {
     border-color: #457b9d;
 }
 
+/* UPPDATERAD: Centrering av feedback-ikon */
 .feedback {
     font-size: 1.5rem;
     position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 15px; /* Position från högerkanten */
+    top: 50%;   /* Börja 50% ner från labeln */
+    transform: translateY(25%); /* Justera vertikalt för perfekt centrering med textfältet */
+    pointer-events: none; /* Gör så man kan klicka "igenom" ikonen */
 }
 
-.form-grupp {
-    position: relative; /* Nödvändig för feedback-positionering */
-}
-
-/* Klasser för rätt/fel-feedback */
 .correct {
     border-color: #2a9d8f !important;
 }
@@ -91,7 +113,6 @@ h1 {
     content: '✗';
     color: #e63946;
 }
-
 
 .knapp-container {
     margin-top: 2rem;

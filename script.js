@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const uppgiftTextEl = document.getElementById('uppgift-text');
     const checkBtn = document.getElementById('check-btn');
     const nextBtn = document.getElementById('next-btn');
+    const checkboxes = document.querySelectorAll('.tempus-val input[type="checkbox"]');
 
     const inputs = {
         yo: document.getElementById('yo'),
@@ -24,17 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const pronouns = ['yo', 'tu', 'el', 'nosotros', 'vosotros', 'ellos'];
 
-    // Databas med verb och tempus
+    // Databas med verb
     const verbs = [
-        'hablar', 'cantar', 'estudiar', 'comprar', 'trabajar', // -ar
-        'comer', 'beber', 'aprender', 'correr', 'comprender', // -er
-        'vivir', 'escribir', 'abrir', 'decidir', 'recibir'     // -ir
+        'hablar', 'cantar', 'estudiar', 'comprar', 'trabajar', 
+        'comer', 'beber', 'aprender', 'correr', 'comprender', 
+        'vivir', 'escribir', 'abrir', 'decidir', 'recibir'
     ];
-    const tenses = ['Presens', 'Preteritum', 'Imperfekt'];
 
     let currentCorrectAnswers = {};
 
-    // Funktion för att få fram de korrekta böjningarna
     function getConjugations(verb, tense) {
         const stem = verb.slice(0, -2);
         const ending = verb.slice(-2);
@@ -50,16 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     conjugations = { yo: stem + 'o', tu: stem + 'es', el: stem + 'e', nosotros: stem + 'imos', vosotros: stem + 'ís', ellos: stem + 'en' };
                 }
                 break;
-
-            case 'Preteritum': // Pretérito Indefinido
+            case 'Preteritum':
                 if (ending === 'ar') {
                     conjugations = { yo: stem + 'é', tu: stem + 'aste', el: stem + 'ó', nosotros: stem + 'amos', vosotros: stem + 'asteis', ellos: stem + 'aron' };
                 } else if (ending === 'er' || ending === 'ir') {
                     conjugations = { yo: stem + 'í', tu: stem + 'iste', el: stem + 'ió', nosotros: stem + 'imos', vosotros: stem + 'isteis', ellos: stem + 'ieron' };
                 }
                 break;
-            
-            case 'Imperfekt': // Pretérito Imperfecto
+            case 'Imperfekt':
                 if (ending === 'ar') {
                     conjugations = { yo: stem + 'aba', tu: stem + 'abas', el: stem + 'aba', nosotros: stem + 'ábamos', vosotros: stem + 'abais', ellos: stem + 'aban' };
                 } else if (ending === 'er' || ending === 'ir') {
@@ -70,33 +67,45 @@ document.addEventListener('DOMContentLoaded', () => {
         return conjugations;
     }
 
-    // Funktion för att starta en ny runda
+    // UPPDATERAD: Funktion för att starta en ny runda
     function startNewRound() {
-        // Rensa alla fält och feedback
+        // Läs av vilka tempus som är valda
+        const selectedTenses = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+
+        // Om inga tempus är valda, avbryt
+        if (selectedTenses.length === 0) {
+            uppgiftTextEl.textContent = "Välj minst ett tempus för att börja öva.";
+            return;
+        }
+
         pronouns.forEach(pronoun => {
             inputs[pronoun].value = '';
             inputs[pronoun].classList.remove('correct', 'incorrect');
             feedbackSpans[pronoun].className = 'feedback';
         });
 
-        // Slumpa ett verb och ett tempus
         const randomVerb = verbs[Math.floor(Math.random() * verbs.length)];
-        const randomTense = tenses[Math.floor(Math.random() * tenses.length)];
+        const randomTense = selectedTenses[Math.floor(Math.random() * selectedTenses.length)];
 
-        // Visa uppgiften
         uppgiftTextEl.textContent = `Böj verbet "${randomVerb}" i ${randomTense}.`;
-
-        // Hämta och spara de korrekta svaren
         currentCorrectAnswers = getConjugations(randomVerb, randomTense);
     }
 
-    // Funktion för att rätta svaren
+    // NYTT: Hjälpfunktion för att ta bort accenter
+    function removeAccents(str) {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    // UPPDATERAD: Funktion för att rätta svaren
     function checkAnswers() {
+        const hints = []; // Samla ledtrådar här
+
         pronouns.forEach(pronoun => {
             const userAnswer = inputs[pronoun].value.trim().toLowerCase();
             const correctAnswer = currentCorrectAnswers[pronoun];
             
-            // Rensa tidigare feedback
             inputs[pronoun].classList.remove('correct', 'incorrect');
             feedbackSpans[pronoun].className = 'feedback';
 
@@ -106,14 +115,26 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 inputs[pronoun].classList.add('incorrect');
                 feedbackSpans[pronoun].classList.add('feedback-incorrect');
+
+                // NYTT: Kontrollera om felet bara är en saknad accent
+                if (correctAnswer && removeAccents(correctAnswer) === userAnswer) {
+                    hints.push(`Kom ihåg accenten för "${pronoun}": ${correctAnswer}`);
+                }
             }
         });
+
+        // Om det finns några ledtrådar, visa dem i en enkel popup
+        if (hints.length > 0) {
+            alert("Nästan rätt! Några ledtrådar:\n\n" + hints.join('\n'));
+        }
     }
 
-    // Event listeners för knapparna
+    // Event listeners
     checkBtn.addEventListener('click', checkAnswers);
     nextBtn.addEventListener('click', startNewRound);
+    // Lyssna på ändringar i checkboxarna också, för att starta en ny runda direkt
+    checkboxes.forEach(cb => cb.addEventListener('change', startNewRound));
 
-    // Starta första rundan när sidan laddas
+    // Starta första rundan
     startNewRound();
 });
