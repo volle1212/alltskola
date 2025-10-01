@@ -1,0 +1,128 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+}
+
+h1 {
+    color: #1d3557;
+}
+
+.uppgift-container {
+    background-color: #a8dadc;
+    color: #1d3557;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+}
+
+.boejningar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    text-align: left;
+}
+
+.form-grupp {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-grupp label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.form-grupp input {
+    padding: 0.75rem;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-grupp input:focus {
+    outline: none;
+    border-color: #457b9d;
+}
+
+.feedback {
+    font-size: 1.5rem;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.form-grupp {
+    position: relative; /* Nödvändig för feedback-positionering */
+}
+
+/* Klasser för rätt/fel-feedback */
+.correct {
+    border-color: #2a9d8f !important;
+}
+
+.incorrect {
+    border-color: #e63946 !important;
+}
+
+.feedback-correct::after {
+    content: '✓';
+    color: #2a9d8f;
+}
+
+.feedback-incorrect::after {
+    content: '✗';
+    color: #e63946;
+}
+
+
+.knapp-container {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#check-btn {
+    background-color: #457b9d;
+    color: white;
+}
+
+#check-btn:hover {
+    background-color: #1d3557;
+}
+
+#next-btn {
+    background-color: #e9c46a;
+    color: #333;
+}
+
+#next-btn:hover {
+    background-color: #f4a261;
+}

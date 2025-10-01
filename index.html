@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spanska Verbträning</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Spanska Verbträning</h1>
+        <p>Öva på regelbundna verb i presens, preteritum och imperfekt.</p>
+
+        <div class="uppgift-container">
+            <h2 id="uppgift-text">Laddar verb...</h2>
+        </div>
+
+        <div class="boejningar-grid">
+            <div class="form-grupp">
+                <label for="yo">Yo</label>
+                <input type="text" id="yo" autocomplete="off" spellcheck="false">
+                <span class="feedback" id="feedback-yo"></span>
+            </div>
+            <div class="form-grupp">
+                <label for="tu">Tú</label>
+                <input type="text" id="tu" autocomplete="off" spellcheck="false">
+                <span class="feedback" id="feedback-tu"></span>
+            </div>
+            <div class="form-grupp">
+                <label for="el">Él/Ella/Usted</label>
+                <input type="text" id="el" autocomplete="off" spellcheck="false">
+                <span class="feedback" id="feedback-el"></span>
+            </div>
+            <div class="form-grupp">
+                <label for="nosotros">Nosotros/as</label>
+                <input type="text" id="nosotros" autocomplete="off" spellcheck="false">
+                <span class="feedback" id="feedback-nosotros"></span>
+            </div>
+            <div class="form-grupp">
+                <label for="vosotros">Vosotros/as</label>
+                <input type="text" id="vosotros" autocomplete="off" spellcheck="false">
+                <span class="feedback" id="feedback-vosotros"></span>
+            </div>
+            <div class="form-grupp">
+                <label for="ellos">Ellos/Ellas/Ustedes</label>
+                <input type="text" id="ellos" autocomplete="off" spellcheck="false">
+                <span class="feedback" id="feedback-ellos"></span>
+            </div>
+        </div>
+
+        <div class="knapp-container">
+            <button id="check-btn">Rätta svar</button>
+            <button id="next-btn">Nästa Verb</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
