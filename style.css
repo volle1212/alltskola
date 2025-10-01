@@ -1,7 +1,7 @@
 :root {
     --bg-gradient-start: #f7f9fc;
     --bg-gradient-end: #eef2f7;
-    --card-bg: #ffffff;
+    --card-bg: #aad3ee83;
     --text-primary: #2c3e50;
     --text-secondary: #7f8c8d;
     --primary-action: #3498db;
@@ -56,7 +56,7 @@ h1 .fa-book-open-reader {
 }
 
 .tempus-val {
-    border: 1px solid var(--border-color);
+    border: 5px solid var(--border-color);
     border-radius: 8px;
     padding: 1rem;
     margin: 1.5rem 0;
