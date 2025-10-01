@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkBtn = document.getElementById('check-btn');
     const nextBtn = document.getElementById('next-btn');
     const checkboxes = document.querySelectorAll('.tempus-val input[type="checkbox"]');
+    // NYTT: Hämta den nya checkboxen
+    const showStemCheckbox = document.getElementById('show-stem');
 
-    // UPPDATERAD: bytt namn för tydlighet (inputs -> inputFields)
     const inputFields = {
         yo: document.getElementById('yo'),
         tu: document.getElementById('tu'),
@@ -15,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ellos: document.getElementById('ellos'),
     };
 
-    // UPPDATERAD: bytt namn för tydlighet (feedbackSpans -> feedbackIcons)
     const feedbackIcons = {
         yo: document.getElementById('feedback-yo'),
         tu: document.getElementById('feedback-tu'),
@@ -34,12 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     let currentCorrectAnswers = {};
+    // NYTT: Variabel för att spara den nuvarande verbstammen
+    let currentStem = '';
 
     function getConjugations(verb, tense) {
         const stem = verb.slice(0, -2);
-        const ending = verb.slice(-2);
         let conjugations = {};
-
+        // (Resten av funktionen är oförändrad...)
         switch (tense) {
             case 'Presens':
                 if (ending === 'ar') { conjugations = { yo: stem + 'o', tu: stem + 'as', el: stem + 'a', nosotros: stem + 'amos', vosotros: stem + 'áis', ellos: stem + 'an' }; } 
@@ -60,22 +61,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startNewRound() {
         const selectedTenses = Array.from(checkboxes)
-            .filter(cb => cb.checked)
+            .filter(cb => cb.checked && cb.id !== 'show-stem') // Ignorera den nya checkboxen här
             .map(cb => cb.value);
 
         if (selectedTenses.length === 0) {
             uppgiftTextEl.textContent = "Välj minst ett tempus för att börja öva.";
+            currentStem = ''; // Rensa stammen om inget är valt
             return;
         }
-
+        
+        const randomVerb = verbs[Math.floor(Math.random() * verbs.length)];
+        // UPPDATERAD: Spara stammen globalt
+        currentStem = randomVerb.slice(0, -2); 
+        
         pronouns.forEach(pronoun => {
-            inputFields[pronoun].value = '';
-            inputFields[pronoun].style.borderColor = ''; // Återställ border
-            // UPPDATERAD: Återställ ikonen
+            // UPPDATERAD: Fyll i stam om checkboxen är ikryssad, annars töm fältet.
+            inputFields[pronoun].value = showStemCheckbox.checked ? currentStem : '';
+            inputFields[pronoun].style.borderColor = '';
             feedbackIcons[pronoun].className = 'feedback-icon'; 
         });
 
-        const randomVerb = verbs[Math.floor(Math.random() * verbs.length)];
         const randomTense = selectedTenses[Math.floor(Math.random() * selectedTenses.length)];
 
         uppgiftTextEl.textContent = `Böj verbet "${randomVerb}" i ${randomTense}.`;
@@ -93,16 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const userAnswer = inputFields[pronoun].value.trim().toLowerCase();
             const correctAnswer = currentCorrectAnswers[pronoun];
             
-            // Återställ ikon och border innan ny kontroll
             feedbackIcons[pronoun].className = 'feedback-icon';
             inputFields[pronoun].style.borderColor = '';
 
             if (userAnswer === correctAnswer) {
-                // UPPDATERAD: Lägg till Font Awesome klasser för rätt svar
                 feedbackIcons[pronoun].classList.add('fa-solid', 'fa-circle-check', 'show');
                 inputFields[pronoun].style.borderColor = 'var(--success)';
             } else {
-                // UPPDATERAD: Lägg till Font Awesome klasser för fel svar
                 feedbackIcons[pronoun].classList.add('fa-solid', 'fa-circle-xmark', 'show');
                 inputFields[pronoun].style.borderColor = 'var(--error)';
 
@@ -113,16 +115,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (hints.length > 0) {
-            setTimeout(() => { // Liten fördröjning så ikonerna hinner visas
+            setTimeout(() => {
                 alert("Nästan rätt! Några ledtrådar:\n\n" + hints.join('\n'));
             }, 100);
         }
     }
 
+    // NYTT: Funktion som körs när man klickar i/ur "Visa verbstam"-rutan
+    function handleShowStemToggle() {
+        if (!currentStem) return; // Gör inget om inget verb är aktivt
+
+        const isChecked = showStemCheckbox.checked;
+        pronouns.forEach(pronoun => {
+            const currentVal = inputFields[pronoun].value;
+
+            if (isChecked) {
+                // Fyll i stammen. Detta skriver över tomma fält.
+                inputFields[pronoun].value = currentStem;
+            } else {
+                // Om rutan avbockas, ta bara bort stammen om det är det *enda* som står i fältet.
+                // Detta förhindrar att ett påbörjat svar raderas.
+                if (currentVal === currentStem) {
+                    inputFields[pronoun].value = '';
+                }
+            }
+        });
+    }
+
     // Event listeners
     checkBtn.addEventListener('click', checkAnswers);
     nextBtn.addEventListener('click', startNewRound);
-    checkboxes.forEach(cb => cb.addEventListener('change', startNewRound));
+    checkboxes.forEach(cb => {
+        if (cb.id !== 'show-stem') { // Lyssna bara på tempus-rutorna för att starta ny runda
+            cb.addEventListener('change', startNewRound);
+        }
+    });
+
+    // NYTT: Lägg till en event listener för den nya checkboxen
+    showStemCheckbox.addEventListener('change', handleShowStemToggle);
 
     startNewRound();
 });
