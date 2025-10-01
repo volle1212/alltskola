@@ -1,7 +1,23 @@
+:root {
+    --bg-gradient-start: #f7f9fc;
+    --bg-gradient-end: #eef2f7;
+    --card-bg: #ffffff;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --primary-action: #3498db;
+    --primary-action-hover: #2980b9;
+    --secondary-action: #f1c40f;
+    --secondary-action-hover: #f39c12;
+    --success: #2ecc71;
+    --error: #e74c3c;
+    --border-color: #dce4ec;
+    --highlight-bg: #eaf5fc;
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f0f2f5;
-    color: #333;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+    color: var(--text-primary);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -11,22 +27,36 @@ body {
 }
 
 .container {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background-color: var(--card-bg);
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
     width: 100%;
-    max-width: 600px;
+    max-width: 700px;
     text-align: center;
 }
 
 h1 {
-    color: #1d3557;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
 }
 
-/* NYTT: Styling för tempus-väljaren */
+h1 .fa-book-open-reader {
+    color: var(--primary-action);
+}
+
+.container p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
 .tempus-val {
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1rem;
     margin: 1.5rem 0;
@@ -35,11 +65,13 @@ h1 {
     gap: 1.5rem;
     flex-wrap: wrap;
 }
+
 .tempus-val legend {
-    font-weight: bold;
+    font-weight: 600;
     padding: 0 0.5rem;
-    color: #457b9d;
+    color: var(--primary-action);
 }
+
 .checkbox-grupp {
     display: flex;
     align-items: center;
@@ -47,103 +79,120 @@ h1 {
 }
 
 .uppgift-container {
-    background-color: #a8dadc;
-    color: #1d3557;
-    padding: 1rem;
+    background-color: var(--highlight-bg);
+    color: var(--text-primary);
+    padding: 1.25rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
+    font-weight: 600;
 }
 
 .boejningar-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
     text-align: left;
 }
 
 .form-grupp {
-    position: relative; /* Nödvändig för feedback-positionering */
+    position: relative;
     display: flex;
     flex-direction: column;
 }
 
 .form-grupp label {
-    font-weight: bold;
+    font-weight: 600;
     margin-bottom: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .form-grupp input {
-    padding: 0.75rem;
-    padding-right: 2.5rem; /* Ge plats för ikonen */
-    border: 2px solid #ccc;
-    border-radius: 5px;
+    padding: 0.75rem 1rem;
+    padding-right: 2.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
     font-size: 1rem;
-    transition: border-color 0.3s;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .form-grupp input:focus {
     outline: none;
-    border-color: #457b9d;
+    border-color: var(--primary-action);
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2);
 }
 
-/* UPPDATERAD: Centrering av feedback-ikon */
-.feedback {
-    font-size: 1.5rem;
+.feedback-icon {
+    font-size: 1.25rem;
     position: absolute;
-    right: 15px; /* Position från högerkanten */
-    top: 50%;   /* Börja 50% ner från labeln */
-    transform: translateY(25%); /* Justera vertikalt för perfekt centrering med textfältet */
-    pointer-events: none; /* Gör så man kan klicka "igenom" ikonen */
+    right: 15px;
+    top: 60%; /* Justerad för ny layout */
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.3s, transform 0.3s;
 }
 
-.correct {
-    border-color: #2a9d8f !important;
+/* Klasser för ikoner när de visas */
+.feedback-icon.show {
+    opacity: 1;
+    transform: scale(1);
 }
-
-.incorrect {
-    border-color: #e63946 !important;
+.feedback-icon.fa-circle-check {
+    color: var(--success);
 }
-
-.feedback-correct::after {
-    content: '✓';
-    color: #2a9d8f;
-}
-
-.feedback-incorrect::after {
-    content: '✗';
-    color: #e63946;
+.feedback-icon.fa-circle-xmark {
+    color: var(--error);
 }
 
 .knapp-container {
-    margin-top: 2rem;
+    margin-top: 2.5rem;
     display: flex;
     justify-content: center;
     gap: 1rem;
 }
 
 button {
-    padding: 0.75rem 1.5rem;
+    padding: 0.8rem 1.75rem;
     font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 #check-btn {
-    background-color: #457b9d;
+    background-color: var(--primary-action);
     color: white;
 }
-
 #check-btn:hover {
-    background-color: #1d3557;
+    background-color: var(--primary-action-hover);
 }
 
 #next-btn {
-    background-color: #e9c46a;
-    color: #333;
+    background-color: var(--secondary-action);
+    color: var(--text-primary);
+}
+#next-btn:hover {
+    background-color: var(--secondary-action-hover);
 }
 
-#next-btn:hover {
-    background-color: #f4a261;
+/* Media query för mindre skärmar */
+@media (max-width: 600px) {
+    .boejningar-grid {
+        grid-template-columns: 1fr;
+    }
+    .container {
+        padding: 1.5rem;
+    }
+    h1 {
+        font-size: 1.5rem;
+    }
 }

@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spanska Verbträning</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="container">
-        <h1>Spanska Verbträning</h1>
-        <p>Öva på regelbundna verb i presens, preteritum och imperfekt.</p>
+        <h1><i class="fa-solid fa-book-open-reader"></i> Spanska Verbträning</h1>
+        <p>Välj tempus nedan och fyll i rätt böjningar.</p>
 
         <fieldset class="tempus-val">
-            <legend>Välj tempus att öva på</legend>
+            <legend>Välj tempus</legend>
             <div class="checkbox-grupp">
                 <input type="checkbox" id="presens" value="Presens" checked>
                 <label for="presens">Presens</label>
@@ -36,32 +42,32 @@
             <div class="form-grupp">
                 <label for="yo">Yo</label>
                 <input type="text" id="yo" autocomplete="off" spellcheck="false">
-                <span class="feedback" id="feedback-yo"></span>
+                <i class="feedback-icon" id="feedback-yo"></i>
             </div>
             <div class="form-grupp">
                 <label for="tu">Tú</label>
                 <input type="text" id="tu" autocomplete="off" spellcheck="false">
-                <span class="feedback" id="feedback-tu"></span>
+                <i class="feedback-icon" id="feedback-tu"></i>
             </div>
             <div class="form-grupp">
                 <label for="el">Él/Ella/Usted</label>
                 <input type="text" id="el" autocomplete="off" spellcheck="false">
-                <span class="feedback" id="feedback-el"></span>
+                <i class="feedback-icon" id="feedback-el"></i>
             </div>
             <div class="form-grupp">
                 <label for="nosotros">Nosotros/as</label>
                 <input type="text" id="nosotros" autocomplete="off" spellcheck="false">
-                <span class="feedback" id="feedback-nosotros"></span>
+                <i class="feedback-icon" id="feedback-nosotros"></i>
             </div>
             <div class="form-grupp">
                 <label for="vosotros">Vosotros/as</label>
                 <input type="text" id="vosotros" autocomplete="off" spellcheck="false">
-                <span class="feedback" id="feedback-vosotros"></span>
+                <i class="feedback-icon" id="feedback-vosotros"></i>
             </div>
             <div class="form-grupp">
                 <label for="ellos">Ellos/Ellas/Ustedes</label>
                 <input type="text" id="ellos" autocomplete="off" spellcheck="false">
-                <span class="feedback" id="feedback-ellos"></span>
+                <i class="feedback-icon" id="feedback-ellos"></i>
             </div>
         </div>
 
