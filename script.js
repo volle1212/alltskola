@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getConjugations(verb, tense) {
         const stem = verb.slice(0, -2);
+        const ending = verb.slice(-2);
         let conjugations = {};
         // (Resten av funktionen är oförändrad...)
         switch (tense) {
