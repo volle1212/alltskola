@@ -1,0 +1,110 @@
+/* Importera typsnitt */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+:root {
+    --bg-gradient-start: #f7f9fc;
+    --bg-gradient-end: #eef2f7;
+    --card-bg: #ffffff;
+    --card-bg-transparent: #aad3ee83; /* Din anpassade färg */
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --primary-action: #3498db;
+    --primary-action-hover: #2980b9;
+    --secondary-action: #f1c40f;
+    --secondary-action-hover: #f39c12;
+    --success: #2ecc71;
+    --error: #e74c3c;
+    --border-color: #dce4ec;
+    --highlight-bg: #eaf5fc;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Ändrad för att hantera längre sidor */
+    min-height: 100vh;
+    margin: 0;
+    padding: 2rem 1rem;
+}
+
+/* Stil för landningssidans container */
+.main-container {
+    width: 100%;
+    max-width: 900px;
+    text-align: center;
+}
+
+.portal-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.portal-header p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 3rem;
+}
+
+/* Grid för ämneskorten */
+.topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.topic-card {
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.topic-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    color: var(--primary-action);
+    margin-bottom: 1rem;
+}
+
+.topic-card h2 {
+    margin: 0 0 0.5rem 0;
+}
+
+.topic-card p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Generella stilar för övningssidorna (används av båda modulerna) */
+.exercise-container {
+    background-color: var(--card-bg-transparent);
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 700px;
+    text-align: center;
+}
+
+.back-link {
+    display: block;
+    text-align: left;
+    margin-bottom: 1.5rem;
+    color: var(--primary-action);
+    text-decoration: none;
+    font-weight: 600;
+}
+.back-link:hover {
+    text-decoration: underline;
+}
