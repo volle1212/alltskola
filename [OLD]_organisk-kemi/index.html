@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organisk Kemi Träning</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        /* Specifik stil för denna modul */
+        .molecule-display {
+            background-color: #fff; border: 2px solid var(--border-color); border-radius: 8px;
+            padding: 1.5rem; font-family: 'Courier New', Courier, monospace; font-size: 1.1rem;
+            text-align: left; overflow-x: auto; margin: 1.5rem 0; line-height: 1.5;
+        }
+        .answer-container input {
+            padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px;
+            font-size: 1rem; width: 80%; max-width: 400px;
+        }
+        .feedback { margin-top: 1rem; font-weight: 600; height: 24px; }
+        .feedback.correct { color: var(--success); }
+        .feedback.incorrect { color: var(--error); }
+        .knapp-container { margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem; }
+        button { background-color: var(--primary-action); color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; }
+        #next-btn { background-color: var(--secondary-action); }
+        .class-selection { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem 1rem; }
+    </style>
+</head>
+<body>
+    <div class="exercise-container">
+        <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Tillbaka till startsidan</a>
+        <h1><i class="fa-solid fa-atom"></i> Namnge Kolväten</h1>
+        <p>Ange det systematiska namnet för föreningen som visas nedan.</p>
+
+        <fieldset style="border: 2px solid var(--border-color); padding: 1.5rem;">
+            <legend>Välj ämnesklasser att öva på</legend>
+            <div class="class-selection">
+                <div class="checkbox-grupp"><input type="checkbox" id="alkan" value="Alkan" checked><label for="alkan">Alkaner</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="alken" value="Alken"><label for="alken">Alkener</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="alkyn" value="Alkyn"><label for="alkyn">Alkyner</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="alkohol" value="Alkohol"><label for="alkohol">Alkoholer</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="eter" value="Eter"><label for="eter">Etrar</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="halogenalkan" value="Halogenalkan"><label for="halogenalkan">Halogenalkaner</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="amin" value="Amin"><label for="amin">Aminer</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="aldehyd" value="Aldehyd"><label for="aldehyd">Aldehyder</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="keton" value="Keton"><label for="keton">Ketoner</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="karboxylsyra" value="Karboxylsyra"><label for="karboxylsyra">Karboxylsyror</label></div>
+                <div class="checkbox-grupp"><input type="checkbox" id="ester" value="Ester"><label for="ester">Estrar</label></div>
+            </div>
+        </fieldset>
+
+        <pre id="molecule-display-area" class="molecule-display">Välj en ämnesklass och klicka "Nästa Molekyl".</pre>
+        
+        <div class="answer-container">
+            <input type="text" id="answer-input" placeholder="t.ex. 2,3-dimetylpentan">
+        </div>
+
+        <div id="feedback-area" class="feedback"></div>
+
+        <div class="knapp-container">
+            <button id="check-btn">Rätta</button>
+            <button id="next-btn">Nästa Molekyl</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

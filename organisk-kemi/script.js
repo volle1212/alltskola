@@ -1,235 +1,190 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // === 1. DOM-ELEMENT OCH GRUNDLÄGGANDE INSTÄLLNINGAR ===
-    const displayArea = document.getElementById('molecule-display-area');
-    const answerInput = document.getElementById('answer-input');
-    const checkBtn = document.getElementById('check-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const feedbackArea = document.getElementById('feedback-area');
-    const checkboxes = document.querySelectorAll('.class-selection input[type="checkbox"]');
 
-    let currentMolecule = null; // Här lagras den genererade molekylen
+    // ===================================================================
+    // DEL 1: KEMISK GENERATOR (Uppdaterad och inkapslad)
+    // ===================================================================
 
-    // === 2. DATABAS MED REGLER FÖR FUNKTIONELLA GRUPPER ===
-    // Prioriteringsordningen är avgörande för korrekt namngivning.
-    const functionalGroups = {
-        'Karboxylsyra': { priority: 10, suffix: 'syra', type: 'terminal', display: 'COOH' },
-        'Ester': { priority: 9, suffix: 'oat', type: 'terminal', display: 'COO' },
-        'Aldehyd': { priority: 8, suffix: 'al', type: 'terminal', display: 'CHO' },
-        'Keton': { priority: 7, suffix: 'on', type: 'internal', display: '=O' },
-        'Alkohol': { priority: 6, suffix: 'ol', prefix: 'hydroxi', type: 'substituent', display: 'OH' },
-        'Amin': { priority: 5, suffix: 'amin', prefix: 'amino', type: 'substituent', display: 'NH₂' },
-        'Alkyn': { priority: 4, suffix: 'yn', type: 'bond' },
-        'Alken': { priority: 3, suffix: 'en', type: 'bond' },
-        'Eter': { priority: 2, prefix: 'alkoxi', type: 'special' },
-        'Halogenalkan': { priority: 1, prefix: 'halogen', type: 'substituent' },
-        'Alkan': { priority: 0, suffix: 'an', type: 'base' }
+    const kemiskGenerator = {
+        data: {
+            // BEGRÄNSAD TILL 10 KOLATOMER
+            stammar: [
+                { c: 1, stam: 'Met', alkan: 'metan' }, { c: 2, stam: 'Et', alkan: 'etan' },
+                { c: 3, stam: 'Prop', alkan: 'propan' }, { c: 4, stam: 'But', alkan: 'butan' },
+                { c: 5, stam: 'Pent', alkan: 'pentan' }, { c: 6, stam: 'Hex', alkan: 'hexan' },
+                { c: 7, stam: 'Hept', alkan: 'heptan' }, { c: 8, stam: 'Okt', alkan: 'oktan' },
+                { c: 9, stam: 'Non', alkan: 'nonan' }, { c: 10, stam: 'Dek', alkan: 'dekan' }
+            ],
+            halogener: [
+                { namn: 'Brom', prefix: 'bromo' }, { namn: 'Klor', prefix: 'kloro' },
+                { namn: 'Fluor', prefix: 'fluoro' }, { namn: 'Jod', prefix: 'jodo' }
+            ],
+            alkylgrupper: [
+                { namn: 'Metyl', c: 1 }, { namn: 'Etyl', c: 2 },
+                { namn: 'Propyl', c: 3 }, { namn: 'Butyl', c: 4 }
+            ],
+            grupper: ['Alkan', 'Alken', 'Alkyn', 'Alkohol', 'Keton', 'Aldehyd', 'Karboxylsyra', 'Halogenalkan', 'Eter', 'Ester']
+        },
+
+        slumpaTal: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
+        slumpaElement: (arr) => arr[kemiskGenerator.slumpaTal(0, arr.length - 1)],
+
+        genereraEttNamn(grupp) {
+            // Systematiska grupper (plockar från en färdig lista)
+            if (grupp === 'Ester') {
+                const alkyls = this.data.stammar.map(s => `${s.stam}yl`);
+                const syror = this.data.stammar.map(s => `${s.stam}anoat`);
+                return `${this.slumpaElement(alkyls)}${this.slumpaElement(syror)}`;
+            }
+            if (grupp === 'Eter') {
+                const alkyls = this.data.stammar.map(s => `${s.stam}yl`);
+                const sorterade = [this.slumpaElement(alkyls), this.slumpaElement(alkyls)].sort();
+                return `${sorterade[0]}${sorterade[1]}eter`;
+            }
+
+            // Slumpmässiga grupper med substituenter
+            const grund = this.data.stammar[this.slumpaTal(2, this.data.stammar.length - 1)]; // C3-C10
+            let ledigaPositioner = Array.from({ length: grund.c }, (_, i) => i + 1);
+            let huvudgruppPos = null;
+            let suffix = 'an';
+            let typ = grupp.toLowerCase();
+            if (typ === 'halogenalkan') typ = 'alkan';
+
+            // Logik för att sätta huvudgrupp och suffix
+            switch (typ) {
+                case 'alken':
+                    huvudgruppPos = this.slumpaTal(1, grund.c - 1);
+                    suffix = 'en';
+                    break;
+                case 'alkyn':
+                    huvudgruppPos = this.slumpaTal(1, grund.c - 1);
+                    suffix = 'yn';
+                    break;
+                case 'alkohol':
+                    huvudgruppPos = this.slumpaTal(1, grund.c);
+                    suffix = 'ol';
+                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos);
+                    break;
+                case 'keton':
+                    if (grund.c < 3) return this.genereraEttNamn(grupp); // Försök igen om kedjan är för kort
+                    huvudgruppPos = this.slumpaTal(2, grund.c - 1);
+                    suffix = 'on';
+                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos);
+                    break;
+                case 'aldehyd':
+                    suffix = 'al';
+                    ledigaPositioner.shift(); // Ta bort pos 1
+                    break;
+                case 'karboxylsyra':
+                    suffix = 'syra';
+                    ledigaPositioner.shift(); // Ta bort pos 1
+                    break;
+            }
+
+            // Välj och placera substituenter
+            const antalSubstituenter = grupp === 'Halogenalkan' ? this.slumpaTal(1, 2) : this.slumpaTal(0, 2);
+            if (antalSubstituenter > ledigaPositioner.length) return this.genereraEttNamn(grupp);
+
+            const substituenter = [];
+            for (let i = 0; i < antalSubstituenter; i++) {
+                const posIndex = this.slumpaTal(0, ledigaPositioner.length - 1);
+                const position = ledigaPositioner.splice(posIndex, 1)[0];
+
+                let subTyp = this.slumpaElement(['halogen', 'alkyl']);
+                if (grupp === 'Halogenalkan') subTyp = 'halogen';
+                
+                const subNamn = subTyp === 'halogen'
+                    ? this.slumpaElement(this.data.halogener).namn
+                    : this.slumpaElement(this.data.alkylgrupper).namn;
+                
+                substituenter.push({ position, namn: subNamn });
+            }
+
+            // Montera namnet
+            const subGrupper = {};
+            substituenter.forEach(s => {
+                if (!subGrupper[s.namn]) subGrupper[s.namn] = [];
+                subGrupper[s.namn].push(s.position);
+            });
+            const diTriPrefix = ['', '', 'di', 'tri'];
+            const prefixDelar = Object.entries(subGrupper).map(([namn, pos]) => {
+                pos.sort((a, b) => a - b);
+                return `${pos.join(',')}-${diTriPrefix[pos.length]}${namn}`;
+            }).sort((a, b) => a.replace(/[^a-zA-Z]/g, '').localeCompare(b.replace(/[^a-zA-Z]/g, '')));
+            const prefixStr = prefixDelar.join('-').toLowerCase();
+
+            // FIX: Korrekt montering för alla grupper
+            const bas = grund.alkan.slice(0, -2);
+            let slutligtNamn;
+            
+            if (['alkohol', 'keton', 'alken', 'alkyn'].includes(typ)) {
+                slutligtNamn = `${prefixStr ? prefixStr + '-' : ''}${huvudgruppPos}-${bas}${suffix}`;
+            } else if (['aldehyd', 'karboxylsyra'].includes(typ)) {
+                slutligtNamn = `${prefixStr ? prefixStr + '-' : ''}${bas}${suffix}`;
+            } else { // Alkaner
+                slutligtNamn = `${prefixStr ? prefixStr + '-' : ''}${grund.alkan}`;
+            }
+            return slutligtNamn;
+        }
     };
 
-    const chainNameMap = { 3: 'prop', 4: 'but', 5: 'pent', 6: 'hex', 7: 'hept' };
-    const alkylMap = { 1: 'metyl', 2: 'etyl' };
-    // PATCH: Ändrat till din föredragna nomenklatur (klor, brom, etc.)
-    const halogenMap = { F: 'fluor', Cl: 'klor', Br: 'brom', I: 'jod' };
-    const countPrefixMap = { 2: 'di', 3: 'tri' };
+    // ===================================================================
+    // DEL 2: UI-LOGIK
+    // ===================================================================
 
-    // === 3. MOLEKYLGENERERING (BYGGER "ATOM-ARRAYEN") ===
-    function generateMolecule(selectedClasses) {
-        const chainLength = 4 + Math.floor(Math.random() * 3); // 4-6 kolatomer
-        const principalClass = selectedClasses
-            .sort((a, b) => functionalGroups[b].priority - functionalGroups[a].priority)[0];
-        const groupInfo = functionalGroups[principalClass];
-
-        let atomArray = Array.from({ length: chainLength }, () => ({
-            bond: '-', top: null, bottom: null
-        }));
-        let moleculeData = { atomArray, principalClass, esterAlkylGroup: null, etherAlkoxyGroup: null };
-
-        let occupiedPositions = [];
-        if (groupInfo.type === 'terminal') {
-            atomArray[0].top = { type: principalClass, display: groupInfo.display };
-            occupiedPositions.push(1);
-            if (principalClass === 'Ester') {
-                const alkylLength = 1 + Math.floor(Math.random() * 2);
-                moleculeData.esterAlkylGroup = alkylMap[alkylLength];
-            }
-        } else if (groupInfo.type === 'internal') {
-            const pos = 2 + Math.floor(Math.random() * (chainLength - 2));
-            atomArray[pos-1].top = { type: principalClass, display: groupInfo.display };
-            occupiedPositions.push(pos);
-        } else if (groupInfo.type === 'substituent') {
-            const pos = 1 + Math.floor(Math.random() * chainLength);
-            atomArray[pos-1].top = { type: principalClass, display: groupInfo.display };
-            occupiedPositions.push(pos);
-        } else if (groupInfo.type === 'bond') {
-            const pos = 1 + Math.floor(Math.random() * (chainLength - 1));
-            atomArray[pos-1].bond = principalClass === 'Alken' ? '=' : '≡';
-            occupiedPositions.push(pos, pos + 1);
-        } else if (principalClass === 'Eter') {
-            const alkoxyLength = 1 + Math.floor(Math.random() * 2);
-            moleculeData.etherAlkoxyGroup = { name: `${alkylMap[alkoxyLength]}oxi` };
-        }
-
-        if (Math.random() > 0.5) {
-            let availablePos = Array.from({ length: chainLength }, (_, i) => i + 1).filter(p => !occupiedPositions.includes(p));
-            if (availablePos.length > 0) {
-                const pos = availablePos[Math.floor(Math.random() * availablePos.length)];
-                const isMethyl = Math.random() > 0.5;
-                if (isMethyl) {
-                     atomArray[pos-1].bottom = { type: 'Alkyl', display: 'CH₃', name: 'metyl' };
-                } else {
-                    const halogenSymbol = Object.keys(halogenMap)[Math.floor(Math.random() * 4)];
-                    atomArray[pos-1].bottom = { type: 'Halogenalkan', display: halogenSymbol, name: halogenMap[halogenSymbol] };
-                }
-            }
-        }
+    const namnDisplay = document.getElementById('kemiskt-namn');
+    const generateBtn = document.getElementById('generate-btn');
+    const checkboxGrid = document.querySelector('.checkbox-grid');
+    const valjAllaBtn = document.getElementById('valj-alla');
+    const avvaljAllaBtn = document.getElementById('avvalj-alla');
+    
+    // Fyll i checkbox-griden dynamiskt
+    kemiskGenerator.data.grupper.forEach(grupp => {
+        const div = document.createElement('div');
+        div.className = 'checkbox-grupp';
         
-        atomArray.forEach((atom, i) => {
-            let bonds = 0;
-            bonds += (i > 0) ? (atomArray[i-1].bond === '=' ? 2 : atomArray[i-1].bond === '≡' ? 3 : 1) : 0;
-            bonds += (i < chainLength - 1) ? (atom.bond === '=' ? 2 : atom.bond === '≡' ? 3 : 1) : 0;
-            if (atom.top) bonds += (atom.top.type === 'Keton') ? 2 : 1;
-            if (atom.bottom) bonds += 1;
-            if (atom.top && functionalGroups[atom.top.type]?.type === 'terminal') bonds = 4;
-            atom.hydrogens = Math.max(0, 4 - bonds);
-        });
-        return moleculeData;
-    }
-
-    // === 4. NAMNGIVNING (OMSKRIVEN MED ROBUST LOGIK) ===
-    function generateIUPACName(molecule) {
-        const { atomArray, principalClass, esterAlkylGroup, etherAlkoxyGroup } = molecule;
-        const chainLength = atomArray.length;
-
-        // Steg 1: Hitta positioner för alla grupper
-        let principalGroupPos = -1;
-        let bondPositions = {}; // {en: [], yn: []}
-        let substituents = [];
-
-        atomArray.forEach((atom, i) => {
-            const pos = i + 1;
-            if (atom.top && atom.top.type === principalClass) principalGroupPos = pos;
-            if (atom.bottom) substituents.push({ name: atom.bottom.name, pos });
-            if (atom.bond === '=') bondPositions.en = [...(bondPositions.en || []), pos];
-            if (atom.bond === '≡') bondPositions.yn = [...(bondPositions.yn || []), pos];
-        });
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = grupp.toLowerCase();
+        checkbox.value = grupp;
+        checkbox.checked = true; // Alla är valda från start
         
-        // Särskilda fall för ester och eter som har enklare namngivning
-        if (esterAlkylGroup) return `${esterAlkylGroup}${chainNameMap[chainLength]}oat`;
-        if (etherAlkoxyGroup) return `${etherAlkoxyGroup.name}${chainNameMap[chainLength]}an`;
-
-        // Steg 2: Bygg prefix-strängen (t.ex. "3-klor-2-metyl-")
-        const prefixStr = substituents
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(p => `${p.pos}-${p.name}`)
-            .join('-') + (substituents.length > 0 ? '-' : '');
-
-        // Steg 3: Bygg huvudkedjans namn (t.ex. "butan", "but-1-en", "pentan-2-ol")
-        const rootName = chainNameMap[chainLength];
-        const groupInfo = functionalGroups[principalClass];
-        let mainChainName = '';
-
-        if (groupInfo.priority >= 5) { // Högprioriterade suffix-grupper (alkohol, keton, syra etc.)
-            let unsaturation = '';
-            if (bondPositions.en) unsaturation = `-${bondPositions.en[0]}-en`;
-            if (bondPositions.yn) unsaturation = `-${bondPositions.yn[0]}-yn`;
-
-            let base = `${rootName}${unsaturation || 'an'}`;
-            let position = groupInfo.type === 'terminal' ? '' : `-${principalGroupPos}`;
-
-            // Hantera "e-bortfall", t.ex. "hexane-ol" -> "hexanol"
-            if (position && unsaturation === '') base = base.slice(0, -1); 
-            
-            mainChainName = `${base}${position}-${groupInfo.suffix}`;
-        } else if (groupInfo.priority >= 3) { // Om alken/alkyn är huvudgruppen
-            mainChainName = `${rootName}-${(bondPositions.en || bondPositions.yn)[0]}-${groupInfo.suffix}`;
-        } else { // Om det är en alkan eller derivat med låg prio (halogenalkan)
-            mainChainName = `${rootName}an`;
-        }
-
-        return prefixStr + mainChainName;
-    }
-
-    // === 5. RITNING (LÄSER "ATOM-ARRAYEN") ===
-    function drawStructure(molecule) {
-        const { atomArray } = molecule;
-        let top = '', mid = '', bot = '';
-
-        atomArray.forEach((atom, i) => {
-            let h_str = atom.hydrogens > 0 ? 'H' + (atom.hydrogens > 1 ? atom.hydrogens : '') : '';
-            let mid_part = `C${h_str}`;
-            let bond = (i < atomArray.length - 1) ? atom.bond : '';
-            
-            if (atom.top && functionalGroups[atom.top.type]?.type === 'terminal') {
-                mid_part = atom.top.display;
-                bond = '';
-            }
-
-            let top_part = atom.top && !functionalGroups[atom.top.type]?.type.includes('terminal') ? `|` : ' ';
-            let bot_part = atom.bottom ? `|` : ' ';
-            let top_display = atom.top && !functionalGroups[atom.top.type]?.type.includes('terminal') ? atom.top.display : ' ';
-            let bot_display = atom.bottom ? atom.bottom.display : ' ';
-
-            const len = Math.max(mid_part.length, top_display.length, bot_display.length);
-
-            mid += mid_part.padEnd(len) + bond.padEnd(bond.length * 2);
-            top += top_part.padStart(mid_part.length).padEnd(len) + ''.padEnd(bond.length * 2);
-            bot += bot_part.padStart(mid_part.length).padEnd(len) + ''.padEnd(bond.length * 2);
-            
-            if (top_part.trim()) {
-                let tempTop = top.split('');
-                tempTop[top.lastIndexOf('|')] = top_display;
-                top = tempTop.join('');
-            }
-            if (bot_part.trim()) {
-                let tempBot = bot.split('');
-                tempBot[bot.lastIndexOf('|')] = bot_display;
-                bot = tempBot.join('');
-            }
-        });
+        const label = document.createElement('label');
+        label.htmlFor = grupp.toLowerCase();
+        label.textContent = grupp;
         
-        let result = [top, mid, bot].filter(s => s.trim().length > 0).join('\n');
-        result = result.replace(/(\d)/g, c => '₀₁₂₃₄₅₆₇₈₉'[c]);
-        displayArea.textContent = result;
-    }
+        div.appendChild(checkbox);
+        div.appendChild(label);
+        checkboxGrid.appendChild(div);
+    });
 
-    // === 6. ANVÄNDARINTERAKTION ===
-    function startNewRound() {
-        const selectedClasses = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-        if (selectedClasses.length === 0) {
-            displayArea.textContent = 'Välj minst en ämnesklass och klicka "Nästa Molekyl".';
-            currentMolecule = null;
+    const checkboxes = document.querySelectorAll('.checkbox-grid input[type="checkbox"]');
+
+    function genereraNyttNamn() {
+        const valdaGrupper = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+
+        if (valdaGrupper.length === 0) {
+            namnDisplay.textContent = 'Välj minst en grupp.';
             return;
         }
 
-        feedbackArea.textContent = '';
-        answerInput.value = '';
-        answerInput.style.borderColor = '';
-        
-        currentMolecule = generateMolecule(selectedClasses);
-        drawStructure(currentMolecule);
-    }
-
-    function checkAnswer() {
-        if (!currentMolecule) return;
-
-        const correctAnswer = generateIUPACName(currentMolecule);
-        const userAnswer = answerInput.value.trim().toLowerCase().replace(/[\s-]/g, '');
-        const formattedCorrectName = correctAnswer.toLowerCase().replace(/[\s-]/g, '');
-
-        if (userAnswer === formattedCorrectName) {
-            feedbackArea.textContent = 'Helt rätt! Bra jobbat!';
-            feedbackArea.className = 'feedback correct';
-            answerInput.style.borderColor = 'var(--success)';
-        } else {
-            feedbackArea.textContent = `Fel. Rätt svar var: ${correctAnswer}`;
-            feedbackArea.className = 'feedback incorrect';
-            answerInput.style.borderColor = 'var(--error)';
-        }
+        const slumpadGrupp = kemiskGenerator.slumpaElement(valdaGrupper);
+        const nyttNamn = kemiskGenerator.genereraEttNamn(slumpadGrupp);
+        namnDisplay.textContent = nyttNamn;
     }
 
     // Event listeners
-    nextBtn.addEventListener('click', startNewRound);
-    checkBtn.addEventListener('click', checkAnswer);
-    answerInput.addEventListener('keyup', (e) => e.key === 'Enter' && checkAnswer());
+    generateBtn.addEventListener('click', genereraNyttNamn);
     
-    startNewRound();
+    valjAllaBtn.addEventListener('click', () => {
+        checkboxes.forEach(cb => cb.checked = true);
+    });
+    
+    avvaljAllaBtn.addEventListener('click', () => {
+        checkboxes.forEach(cb => cb.checked = false);
+    });
+
+    // Generera ett namn direkt när sidan laddas
+    genereraNyttNamn();
 });
