@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Basic JSmol — name → structure test</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial,sans-serif;background:#f7f7f7;padding:18px}
+    .container{max-width:920px;margin:0 auto}
+    #jmolContainer{width:100%;height:500px;border:1px solid #ddd;background:#fff;margin-top:12px}
+    .input-row{display:flex;gap:8px;align-items:center}
+    input[type=text]{flex:1;padding:10px;font-size:16px}
+    button{padding:10px 14px;font-size:15px}
+    #status{margin-top:8px;color:#333}
+    code{background:#eee;padding:2px 6px;border-radius:4px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>JSmol — name → structure (basic test)</h1>
+    <p>Skriv in ett engelskt systematiskt namn på ett kolväte (IUPAC). Exempel: <code>hexane</code>, <code>2-methylpropane</code>, <code>2,2-dimethylpropane</code>, <code>cyclohexane</code>.</p>
+
+    <div class="input-row">
+      <input id="nameInput" type="text" placeholder="t.ex. 2-methylpropane" />
+      <button id="renderBtn">Render</button>
+      <button id="exampleBtn">Try examples</button>
+    </div>
+    <div id="status">Status: idle</div>
+
+    <div id="jmolContainer"></div>
+  </div>
+
+  <!-- JSmol (hosted at St. Olaf / Jmol project) -->
+  <script src="https://chemapps.stolaf.edu/jmol/jsmol/JSmol.min.js"></script>
+
+<script>
+  let jmolReady = false;
+
+  const JmolInfo = {
+    width: '100%',
+    height: 500,
+    debug: false,
+    j2sPath: 'https://chemapps.stolaf.edu/jmol/jsmol/j2s',
+    use: 'HTML5',
+    readyFunction: (applet) => {
+      jmolReady = true;
+      console.log('✅ JSmol ready');
+      statusEl.textContent = 'Status: JSmol loaded and ready.';
+    }
+  };
+
+  // Infoga applet i sidan
+  document.getElementById('jmolContainer').innerHTML =
+    Jmol.getAppletHtml('jmolApplet', JmolInfo);
+
+  const statusEl = document.getElementById('status');
+  const input = document.getElementById('nameInput');
+  const btn = document.getElementById('renderBtn');
+  const exampleBtn = document.getElementById('exampleBtn');
+
+  btn.addEventListener('click', () => renderName(input.value.trim()));
+  exampleBtn.addEventListener('click', () => {
+    const examples = ['hexane','2-methylpropane','2,2-dimethylpropane','cyclohexane','2-methylbutane'];
+    const name = examples[Math.floor(Math.random()*examples.length)];
+    input.value = name;
+    renderName(name);
+  });
+
+  async function renderName(name) {
+    if (!name) {
+      statusEl.textContent = 'Status: skriv ett namn först.';
+      return;
+    }
+
+    if (!jmolReady) {
+      statusEl.textContent = 'Väntar på att JSmol ska bli redo...';
+      // vänta aktivt tills JSmol är klart
+      await new Promise(resolve => {
+        const check = setInterval(() => {
+          if (jmolReady) { clearInterval(check); resolve(); }
+        }, 200);
+      });
+    }
+
+    statusEl.textContent = 'Status: försöker lösa namn → SMILES via NCI...';
+    const encoded = encodeURIComponent(name);
+    const smilesUrl = `https://cactus.nci.nih.gov/chemical/structure/${encoded}/smiles`;
+
+    try {
+      const res = await fetch(smilesUrl);
+      if (!res.ok) throw new Error('NCI svarade med status ' + res.status);
+      let smiles = (await res.text()).trim();
+      if (!smiles) throw new Error('Tom SMILES från NCI');
+      statusEl.textContent = `SMILES: ${smiles} — rendering...`;
+
+      // Ladda molekylen
+      Jmol.script(jmolApplet, `load :smiles:${smiles}`);
+      Jmol.script(jmolApplet, 'select all; spacefill 23%; wireframe 0.15; color cpk; spin off;');
+    } catch (err) {
+      console.warn(err);
+      statusEl.textContent = 'Primär metod misslyckades; försöker SDF...';
+      const sdfUrl = `https://cactus.nci.nih.gov/chemical/structure/${encoded}/sdf`;
+      Jmol.script(jmolApplet, `load \"${sdfUrl}\"`);
+    }
+  }
+</script>
+
+</body>
+</html>
