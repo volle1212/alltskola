@@ -11,13 +11,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <link rel="stylesheet" href="style.css">
-    <script type="text/javascript" src="https://chemapps.stolaf.edu/jmol/jsmol/JSmol.min.js"></script>
 </head>
 <body>
 
     <div class="container">
         <h1><i class="fa-solid fa-flask-vial"></i> Nomenklatur-tränaren</h1>
-        <p>Välj vilka grupper du vill öva på och generera ett kemiskt namn med 3D-modell.</p>
+        <p>Välj vilka grupper du vill öva på och generera ett kemiskt namn.</p>
 
         <fieldset class="grupp-val">
             <legend>Välj grupper</legend>
@@ -29,30 +28,8 @@
                 </div>
         </fieldset>
 
-        <div class="resultat-grid">
-            <div class="uppgift-container">
-                <h2 id="kemiskt-namn">Välj en grupp och klicka på "Generera"</h2>
-            </div>
-            <div class="jmol-wrapper">
-                <div id="jmol-container">
-                    </div>
-                <p id="jmol-status">Laddar JSmol...</p>
-            </div>
-        </div>
-
-        HTML
-
-        <fieldset class="debug-sektion">
-            <legend>Manuell Felsökning</legend>
-            <p>Skriv ett engelskt IUPAC-namn här för att testa renderingsmotorn direkt.</p>
-            <div class="input-row">
-                <input id="debug-input" type="text" placeholder="t.ex. 2-methylbutane">
-                <button id="debug-btn">Testa Namn</button>
-            </div>
-        </fieldset>
-
-        <div class="knapp-container">
-            <button id="generate-btn">Generera nytt namn</button>
+        <div class="uppgift-container">
+            <h2 id="kemiskt-namn">Välj en grupp och klicka på "Generera"</h2>
         </div>
 
         <div class="knapp-container">
@@ -60,7 +37,7 @@
         </div>
 
         <footer class="footer">
-            <p>Generator baserad på IUPAC-nomenklatur. 3D-modeller via JSmol och NCI.</p>
+            <p>Generator baserad på IUPAC-nomenklatur.</p>
         </footer>
     </div>
 
