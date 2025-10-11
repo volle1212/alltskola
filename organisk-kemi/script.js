@@ -36,29 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ol: { sv: 'ol', en: 'ol' },
                 on: { sv: 'on', en: 'one' },
                 al: { sv: 'al', en: 'al' },
-                syra: { sv: 'syra', en: 'oic acid' },
-                eter: { sv: 'eter', en: 'ether' },
-                yl: { sv: 'yl', en: 'yl' },
-                oat: { sv: 'oat', en: 'oate' }
-            },
-            halogener: [
-                { namn: { sv: 'Brom', en: 'Bromo' }, prefix: { sv: 'bromo', en: 'bromo' } },
-                { namn: { sv: 'Klor', en: 'Chloro' }, prefix: { sv: 'kloro', en: 'chloro' } },
-                { namn: { sv: 'Fluor', en: 'Fluoro' }, prefix: { sv: 'fluoro', en: 'fluoro' } },
-                { namn: { sv: 'Jod', en: 'Iodo' }, prefix: { sv: 'jodo', en: 'iodo' } }
-            ],
-            alkylgrupper: [
-                { namn: { sv: 'Metyl', en: 'Methyl' }, c: 1 }, { namn: { sv: 'Etyl', en: 'Ethyl' }, c: 2 },
-                { namn: { sv: 'Propyl', en: 'Propyl' }, c: 3 }, { namn: { sv: 'Butyl', en: 'Butyl' }, c: 4 }
-            ],
-            suffix: {
-                an: { sv: 'an', en: 'ane' },
-                en: { sv: 'en', en: 'ene' },
-                yn: { sv: 'yn', en: 'yne' },
-                ol: { sv: 'ol', en: 'ol' },
-                on: { sv: 'on', en: 'one' },
-                al: { sv: 'al', en: 'al' },
-                syra: { sv: 'syra', en: 'oic acid' },
+                syra: { sv: 'ansyra', en: 'anoic acid' },
                 eter: { sv: 'eter', en: 'ether' },
                 yl: { sv: 'yl', en: 'yl' },
                 oat: { sv: 'oat', en: 'oate' }
@@ -100,22 +78,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Logik för att sätta huvudgrupp och suffix
             switch (typ) {
+                case 'alkan':
+                    // För alkaner, ta bort pos 1 direkt (annars blir substituent del av kedjan)
+                    ledigaPositioner.shift();
+                    break;
                 case 'alken':
-                    huvudgruppPos = this.slumpaTal(1, grund.c - 1);
+                    // Enligt IUPAC: numrera från det håll som ger lägsta nummer
+                    huvudgruppPos = this.slumpaTal(1, Math.ceil((grund.c - 1) / 2));
                     suffixKey = 'en';
                     break;
                 case 'alkyn':
-                    huvudgruppPos = this.slumpaTal(1, grund.c - 1);
+                    // Enligt IUPAC: numrera från det håll som ger lägsta nummer
+                    huvudgruppPos = this.slumpaTal(1, Math.ceil((grund.c - 1) / 2));
                     suffixKey = 'yn';
                     break;
                 case 'alkohol':
-                    huvudgruppPos = this.slumpaTal(1, grund.c);
+                    huvudgruppPos = this.slumpaTal(1, Math.ceil(grund.c / 2));
                     suffixKey = 'ol';
                     ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos);
                     break;
                 case 'keton':
                     if (grund.c < 3) return this.genereraEttNamn(grupp); // Försök igen om kedjan är för kort
-                    huvudgruppPos = this.slumpaTal(2, grund.c - 1);
+                    // Enligt IUPAC: keton kan vara på pos 2 till mitten, alltid lägsta nummer
+                    huvudgruppPos = this.slumpaTal(2, Math.ceil(grund.c / 2));
                     suffixKey = 'on';
                     ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos);
                     break;
@@ -129,6 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
 
+            // Ta bort sista positionen för alla grupper (undvik att substituenter sitter på kedjeslutet)
+            // Detta följer IUPAC-regeln att substituenter på kedjeslutet ska räknas in i huvudkedjan
+            ledigaPositioner = ledigaPositioner.filter(p => p !== grund.c);
+            
             // Välj och placera substituenter
             const antalSubstituenter = grupp === 'Halogenalkan' ? this.slumpaTal(1, 2) : this.slumpaTal(0, 2);
             if (antalSubstituenter > ledigaPositioner.length) return this.genereraEttNamn(grupp);
@@ -173,14 +162,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const suffix = this.data.suffix[suffixKey];
 
             const createSlutligtNamn = (prefix, lang) => {
-                // Korrekt avkapning: -an (sv, 2 tecken), -ane (en, 3 tecken)
-                const sliceIndex = lang === 'sv' ? -2 : -3;
-                const bas = grund.alkan[lang].slice(0, sliceIndex); 
-
-                if (['alkohol', 'keton', 'alken', 'alkyn'].includes(typ)) {
-                    return `${prefix ? prefix + '-' : ''}${huvudgruppPos}-${bas}${suffix[lang]}`;
-                } else if (['aldehyd', 'karboxylsyra'].includes(typ)) {
-                    return `${prefix ? prefix + '-' : ''}${bas}${suffix[lang]}`;
+                // Använd stammen från data
+                const stam = grund.stam[lang];
+                
+                // Olika grupper behöver olika konstruktion
+                if (typ === 'alken' || typ === 'alkyn') {
+                    // Alken/alkyn: stam + suffix (utan "an")
+                    return `${prefix ? prefix + '-' : ''}${huvudgruppPos}-${stam.toLowerCase()}${suffix[lang]}`;
+                } else if (typ === 'alkohol' || typ === 'keton') {
+                    // Alkohol/keton: stam + "an" + suffix
+                    const anSuffix = lang === 'sv' ? 'an' : 'an';
+                    return `${prefix ? prefix + '-' : ''}${huvudgruppPos}-${stam.toLowerCase()}${anSuffix}${suffix[lang]}`;
+                } else if (typ === 'aldehyd') {
+                    // Aldehyd: stam + "an" + "al" (utan positionsnummer)
+                    const anSuffix = lang === 'sv' ? 'an' : 'an';
+                    return `${prefix ? prefix + '-' : ''}${stam.toLowerCase()}${anSuffix}${suffix[lang]}`;
+                } else if (typ === 'karboxylsyra') {
+                    // Karboxylsyra: stam + suffix (suffix innehåller redan "an")
+                    return `${prefix ? prefix + '-' : ''}${stam.toLowerCase()}${suffix[lang]}`;
                 } else { // Alkaner (inkl. Halogenalkaner)
                     return `${prefix ? prefix + '-' : ''}${grund.alkan[lang]}`;
                 }
@@ -201,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const namnDisplay = document.getElementById('kemiskt-namn');
     const generateBtn = document.getElementById('generate-btn');
+    const visaNamnBtn = document.getElementById('visa-namn-btn');
     const checkboxGrid = document.querySelector('.checkbox-grid');
     const valjAllaBtn = document.getElementById('valj-alla');
     const avvaljAllaBtn = document.getElementById('avvalj-alla');
@@ -247,9 +247,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         console.log('Engelskt namn:', namnObjekt.en);
-        // Spara det engelska namnet för framtida bruk, t.ex. i ett data-attribut
-        namnDisplay.dataset.enName = namnObjekt.en; 
-        namnDisplay.textContent = namnObjekt.sv;
+        console.log('Svenskt namn:', namnObjekt.sv);
+        
+        // Spara namnen i data-attribut
+        namnDisplay.dataset.enName = namnObjekt.en;
+        namnDisplay.dataset.svName = namnObjekt.sv;
+        
+        // Visa en placeholder istället för svenska namnet
+        namnDisplay.textContent = '❓ Vad heter denna förening?';
+        
+        // Visa knappen för att avslöja namnet
+        visaNamnBtn.style.display = 'inline-flex';
+        visaNamnBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Visa svenska namn';
+        visaNamnBtn.disabled = false;
 
         // Rendera den nya molekylen
         renderMolekyl(namnObjekt.en);
@@ -257,6 +267,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event listeners
     generateBtn.addEventListener('click', genereraNyttNamn);
+    
+    visaNamnBtn.addEventListener('click', () => {
+        // Visa det svenska namnet
+        const svensktNamn = namnDisplay.dataset.svName;
+        if (svensktNamn) {
+            namnDisplay.textContent = svensktNamn;
+            visaNamnBtn.innerHTML = '<i class="fa-solid fa-check"></i> Avslöjat!';
+            visaNamnBtn.disabled = true;
+        }
+    });
     
     valjAllaBtn.addEventListener('click', () => {
         checkboxes.forEach(cb => cb.checked = true);
@@ -271,6 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     
     const jmolContainer = document.getElementById('jmol-container');
+    let isInitialLoad = true; // Flagga för att undvika oändlig loop
 
     const JmolInfo = {
         width: '100%',
@@ -282,15 +303,94 @@ document.addEventListener('DOMContentLoaded', () => {
         readyFunction: (applet) => {
             jmolApplet = applet;
             console.log('✅ JSmol ready');
-            // Generera första namnet och molekylen när JSmol är redo
-            genereraNyttNamn();
+            // Generera första namnet ENDAST vid första laddningen
+            if (isInitialLoad) {
+                isInitialLoad = false;
+                genereraNyttNamn();
+            }
         }
     };
 
-    function renderMolekyl(namn) {
-        if (jmolApplet && namn) {
-            console.log(`Rendering: ${namn}`);
-            const script = `load $${namn}; spin off;`;
+    // Mappning för triviala namn (ökar chansen att JSmol hittar molekylen)
+    const trivialtNamnMapping = {
+        // Karboxylsyror
+        'methanoic acid': 'formic acid',
+        'ethanoic acid': 'acetic acid',
+        'propanoic acid': 'propionic acid',
+        'butanoic acid': 'butyric acid',
+        'pentanoic acid': 'valeric acid',
+        'hexanoic acid': 'caproic acid',
+        'heptanoic acid': 'enanthic acid',
+        'octanoic acid': 'caprylic acid',
+        // Aldehyder
+        'methanal': 'formaldehyde',
+        'ethanal': 'acetaldehyde',
+        'propanal': 'propionaldehyde',
+        'butanal': 'butyraldehyde',
+        // Ketoner
+        'propanone': 'acetone',
+        '2-butanone': 'methyl ethyl ketone',
+        // Alkoholer (vanliga)
+        'methanol': 'methyl alcohol',
+        'ethanol': 'ethyl alcohol',
+        'propanol': 'propyl alcohol',
+        '2-propanol': 'isopropyl alcohol'
+    };
+
+    function getMolekylIdentifier(namn) {
+        // Försök först med trivialt namn om det finns
+        const trivialNamn = trivialtNamnMapping[namn.toLowerCase()];
+        if (trivialNamn) {
+            return trivialNamn;
+        }
+        return namn;
+    }
+
+    async function renderMolekyl(namn) {
+        if (!jmolApplet || !namn) return;
+        
+        console.log(`🧪 Rendering: ${namn}`);
+        
+        // Försök först med trivialt/systematiskt namn
+        const molekylId = getMolekylIdentifier(namn);
+        console.log(`Försöker med: ${molekylId}`);
+        
+        let script = `load $${molekylId}; spin off;`;
+        Jmol.script(jmolApplet, script);
+        
+        // Kontrollera om det gick bra genom att se om molekylen laddades
+        // Om inte, försök med NCI resolver som fallback
+        setTimeout(async () => {
+            const atomCount = Jmol.evaluateVar(jmolApplet, 'atomCount');
+            if (atomCount === 0 || atomCount === null) {
+                console.warn(`⚠️ Kunde inte ladda "${molekylId}", försöker med NCI resolver...`);
+                await tryNCIResolver(namn);
+            } else {
+                console.log(`✅ Molekyl laddad (${atomCount} atomer)`);
+            }
+        }, 500);
+    }
+
+    async function tryNCIResolver(namn) {
+        try {
+            // NCI/CADD Chemical Identifier Resolver
+            const url = `https://cactus.nci.nih.gov/chemical/structure/${encodeURIComponent(namn)}/smiles`;
+            console.log(`🔍 Slår upp: ${url}`);
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Kunde inte hitta molekylen');
+            
+            const smiles = await response.text();
+            console.log(`✅ SMILES hittad: ${smiles}`);
+            
+            // Ladda molekylen med SMILES
+            const script = `load $${smiles}; spin off;`;
+            Jmol.script(jmolApplet, script);
+            
+        } catch (error) {
+            console.error(`❌ Kunde inte rendera molekylen: ${error.message}`);
+            // Visa felmeddelande i JSmol-viewern (utan att förstöra appleten)
+            const script = `echo "⚠️ Kunde inte rendera molekylen"`;
             Jmol.script(jmolApplet, script);
         }
     }
