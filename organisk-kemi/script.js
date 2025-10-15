@@ -36,12 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ol: { sv: 'ol', en: 'ol' },
                 on: { sv: 'on', en: 'one' },
                 al: { sv: 'al', en: 'al' },
-                syra: { sv: 'ansyra', en: 'anoic acid' },
+                syra: { sv: 'ansyra', en: 'anoicacid' },
                 eter: { sv: 'eter', en: 'ether' },
                 yl: { sv: 'yl', en: 'yl' },
-                oat: { sv: 'oat', en: 'oate' }
+                oat: { sv: 'anoat', en: 'anoate' },
+                amin: { sv: 'anamin', en: 'anamine' }
             },
-            grupper: ['Alkan', 'Alken', 'Alkyn', 'Alkohol', 'Keton', 'Aldehyd', 'Karboxylsyra', 'Halogenalkan', 'Eter', 'Ester']
+            grupper: ['Alkan', 'Alken', 'Alkyn', 'Alkohol', 'Keton', 'Aldehyd', 'Karboxylsyra', 'Halogenalkan', 'Eter', 'Ester', 'Amin']
         },
 
         slumpaTal: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
@@ -50,22 +51,80 @@ document.addEventListener('DOMContentLoaded', () => {
         genereraEttNamn(grupp) {
             // Systematiska grupper (plockar från en färdig lista)
             if (grupp === 'Ester') {
-                const alkylStam = this.slumpaElement(this.data.stammar);
-                const syraStam = this.slumpaElement(this.data.stammar);
+                // Begränsa till max 8 kolatomer för varje del för att undvika för långa namn
+                const alkylStam = this.data.stammar[this.slumpaTal(1, 7)]; // C1-C8
+                const syraStam = this.data.stammar[this.slumpaTal(1, 7)]; // C1-C8
+                const alkylDel_sv = `${alkylStam.stam.sv}${this.data.suffix.yl.sv}`;
+                const alkylDel_en = `${alkylStam.stam.en}${this.data.suffix.yl.en}`;
                 return {
-                    sv: `${alkylStam.stam.sv}${this.data.suffix.yl.sv}${syraStam.stam.sv}${this.data.suffix.oat.sv}`,
-                    en: `${alkylStam.stam.en}${this.data.suffix.yl.en}${syraStam.stam.en}${this.data.suffix.oat.en}`
+                    sv: `${alkylDel_sv.charAt(0).toUpperCase() + alkylDel_sv.slice(1).toLowerCase()}${syraStam.stam.sv.toLowerCase()}${this.data.suffix.oat.sv}`,
+                    en: `${alkylDel_en.charAt(0).toUpperCase() + alkylDel_en.slice(1).toLowerCase()}${syraStam.stam.en.toLowerCase()}${this.data.suffix.oat.en}`
                 };
             }
             if (grupp === 'Eter') {
                 const stam1 = this.slumpaElement(this.data.stammar);
                 const stam2 = this.slumpaElement(this.data.stammar);
-                const alkyls_sv = [`${stam1.stam.sv}${this.data.suffix.yl.sv}`, `${stam2.stam.sv}${this.data.suffix.yl.sv}`].sort();
-                const alkyls_en = [`${stam1.stam.en}${this.data.suffix.yl.en}`, `${stam2.stam.en}${this.data.suffix.yl.en}`].sort();
+                const alkyls_sv = [`${stam1.stam.sv.toLowerCase()}${this.data.suffix.yl.sv}`, `${stam2.stam.sv.toLowerCase()}${this.data.suffix.yl.sv}`].sort();
+                const alkyls_en = [`${stam1.stam.en.toLowerCase()}${this.data.suffix.yl.en}`, `${stam2.stam.en.toLowerCase()}${this.data.suffix.yl.en}`].sort();
+                const namn_sv = `${alkyls_sv[0]} ${alkyls_sv[1]} ${this.data.suffix.eter.sv}`;
+                const namn_en = `${alkyls_en[0]} ${alkyls_en[1]} ${this.data.suffix.eter.en}`;
                 return {
-                    sv: `${alkyls_sv[0]}${alkyls_sv[1]}${this.data.suffix.eter.sv}`,
-                    en: `${alkyls_en[0]}${alkyls_en[1]}${this.data.suffix.eter.en}`
+                    sv: namn_sv.charAt(0).toUpperCase() + namn_sv.slice(1),
+                    en: namn_en.charAt(0).toUpperCase() + namn_en.slice(1)
                 };
+            }
+            if (grupp === 'Amin') {
+                // Aminer: primära (R-NH2), sekundära (R-NH-R'), tertiära (R-NR'-R'')
+                const typ = this.slumpaElement(['primär', 'sekundär', 'tertiär']);
+                const grund = this.data.stammar[this.slumpaTal(1, 6)]; // C1-C7 för enklare namn
+                
+                if (typ === 'primär') {
+                    // R-NH2: alkylamin (inte alkanamin)
+                    const alkyl = this.data.alkylgrupper[grund.c - 1]; // -1 för att matcha alkylgrupper array
+                    return {
+                        sv: `${alkyl.namn.sv.toLowerCase()}amin`,
+                        en: `${alkyl.namn.en.toLowerCase()}amine`
+                    };
+                } else if (typ === 'sekundär') {
+                    // R-NH-R': alkylalkylamin eller dialkylamin
+                    const alkyl1 = this.data.alkylgrupper[this.slumpaTal(0, 2)]; // metyl, etyl, propyl
+                    const alkyl2 = this.data.alkylgrupper[this.slumpaTal(0, 2)];
+                    
+                    // Om samma alkylgrupper, använd "di-"
+                    if (alkyl1.namn.sv === alkyl2.namn.sv) {
+                        return {
+                            sv: `di${alkyl1.namn.sv.toLowerCase()}amin`,
+                            en: `di${alkyl1.namn.en.toLowerCase()}amine`
+                        };
+                    } else {
+                        // Sortera alkylgrupperna alfabetiskt
+                        const alkyls = [alkyl1, alkyl2].sort((a, b) => a.namn.sv.localeCompare(b.namn.sv));
+                        return {
+                            sv: `${alkyls[0].namn.sv.toLowerCase()}${alkyls[1].namn.sv.toLowerCase()}amin`,
+                            en: `${alkyls[0].namn.en.toLowerCase()}${alkyls[1].namn.en.toLowerCase()}amine`
+                        };
+                    }
+                } else { // tertiär
+                    // R-NR'-R'': trialkylamin eller alkylalkylalkylamin
+                    const alkyl1 = this.data.alkylgrupper[this.slumpaTal(0, 2)];
+                    const alkyl2 = this.data.alkylgrupper[this.slumpaTal(0, 2)];
+                    const alkyl3 = this.data.alkylgrupper[this.slumpaTal(0, 2)];
+                    
+                    // Om alla samma alkylgrupper, använd "tri-"
+                    if (alkyl1.namn.sv === alkyl2.namn.sv && alkyl2.namn.sv === alkyl3.namn.sv) {
+                        return {
+                            sv: `tri${alkyl1.namn.sv.toLowerCase()}amin`,
+                            en: `tri${alkyl1.namn.en.toLowerCase()}amine`
+                        };
+                    } else {
+                        // Sortera alfabetiskt
+                        const alkyls = [alkyl1, alkyl2, alkyl3].sort((a, b) => a.namn.sv.localeCompare(b.namn.sv));
+                        return {
+                            sv: `${alkyls[0].namn.sv.toLowerCase()}${alkyls[1].namn.sv.toLowerCase()}${alkyls[2].namn.sv.toLowerCase()}amin`,
+                            en: `${alkyls[0].namn.en.toLowerCase()}${alkyls[1].namn.en.toLowerCase()}${alkyls[2].namn.en.toLowerCase()}amine`
+                        };
+                    }
+                }
             }
 
             // Slumpmässiga grupper med substituenter
@@ -86,23 +145,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Enligt IUPAC: numrera från det håll som ger lägsta nummer
                     huvudgruppPos = this.slumpaTal(1, Math.ceil((grund.c - 1) / 2));
                     suffixKey = 'en';
+                    ledigaPositioner = ledigaPositioner.filter(p => p !== 1);
                     break;
                 case 'alkyn':
                     // Enligt IUPAC: numrera från det håll som ger lägsta nummer
                     huvudgruppPos = this.slumpaTal(1, Math.ceil((grund.c - 1) / 2));
                     suffixKey = 'yn';
+                    ledigaPositioner = ledigaPositioner.filter(p => p !== 1);
                     break;
                 case 'alkohol':
                     huvudgruppPos = this.slumpaTal(1, Math.ceil(grund.c / 2));
                     suffixKey = 'ol';
-                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos);
+                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos && p !== 1);
                     break;
                 case 'keton':
                     if (grund.c < 3) return this.genereraEttNamn(grupp); // Försök igen om kedjan är för kort
                     // Enligt IUPAC: keton kan vara på pos 2 till mitten, alltid lägsta nummer
                     huvudgruppPos = this.slumpaTal(2, Math.ceil(grund.c / 2));
                     suffixKey = 'on';
-                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos);
+                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos && p !== 1);
                     break;
                 case 'aldehyd':
                     suffixKey = 'al';
@@ -130,9 +191,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 let subTyp = this.slumpaElement(['halogen', 'alkyl']);
                 if (grupp === 'Halogenalkan') subTyp = 'halogen';
                 
-                const sub = subTyp === 'halogen'
-                    ? this.slumpaElement(this.data.halogener)
-                    : this.slumpaElement(this.data.alkylgrupper);
+                let sub;
+                if (subTyp === 'halogen') {
+                    sub = this.slumpaElement(this.data.halogener);
+                } else {
+                    // För alkylgrupper: kontrollera att de inte skapar en längre kedja
+                    // Längsta kedjan genom alkyl: max(alkyl.c + position, alkyl.c + grund.c - position + 1)
+                    // Detta måste vara <= grund.c, vilket ger: alkyl.c <= min(position - 1, grund.c - position)
+                    const maxAlkylStorlek = Math.min(position - 1, grund.c - position);
+                    
+                    // Filtrera alkylgrupper som är tillräckligt små
+                    const tillgangligaAlkylgrupper = this.data.alkylgrupper.filter(a => a.c <= maxAlkylStorlek);
+                    
+                    // Om inga tillgängliga alkylgrupper, använd halogen istället
+                    if (tillgangligaAlkylgrupper.length === 0) {
+                        sub = this.slumpaElement(this.data.halogener);
+                    } else {
+                        sub = this.slumpaElement(tillgangligaAlkylgrupper);
+                    }
+                }
                 
                 substituenter.push({ position, namn: sub.namn });
             }
@@ -334,7 +411,42 @@ document.addEventListener('DOMContentLoaded', () => {
         'methanol': 'methyl alcohol',
         'ethanol': 'ethyl alcohol',
         'propanol': 'propyl alcohol',
-        '2-propanol': 'isopropyl alcohol'
+        '2-propanol': 'isopropyl alcohol',
+        // Estrar (vanliga) - utan mellanrum
+        'methylmethanoate': 'methyl formate',
+        'ethylmethanoate': 'ethyl formate',
+        'methylethanoate': 'methyl acetate',
+        'ethylethanoate': 'ethyl acetate',
+        'propylethanoate': 'propyl acetate',
+        'butylethanoate': 'butyl acetate',
+        'pentylethanoate': 'pentyl acetate',
+        'hexylethanoate': 'hexyl acetate',
+        'heptylethanoate': 'heptyl acetate',
+        'octylethanoate': 'octyl acetate',
+        'nonyloctanoate': 'nonyl octanoate',
+        'octyloctanoate': 'octyl octanoate',
+        'heptylheptanoate': 'heptyl heptanoate',
+        'hexylhexanoate': 'hexyl hexanoate',
+        'pentylpentanoate': 'pentyl pentanoate',
+        'butylbutanoate': 'butyl butanoate',
+        'propylpropanoate': 'propyl propanoate',
+        'ethylethanoate': 'ethyl acetate',
+        'methylmethanoate': 'methyl formate',
+        // Aminer (vanliga trivialnamn)
+        'metylamin': 'methylamine',
+        'etylamin': 'ethylamine',
+        'propylamin': 'propylamine',
+        'butylamin': 'butylamine',
+        'pentylamin': 'pentylamine',
+        'hexylamin': 'hexylamine',
+        'dimetylamin': 'dimethylamine',
+        'dietylamin': 'diethylamine',
+        'dipropylamin': 'dipropylamine',
+        'trimetylamin': 'trimethylamine',
+        'trietylamin': 'triethylamine',
+        'metyletylamin': 'methylethylamine',
+        'metylpropylamin': 'methylpropylamine',
+        'etylpropylamin': 'ethylpropylamine'
     };
 
     function getMolekylIdentifier(namn) {
