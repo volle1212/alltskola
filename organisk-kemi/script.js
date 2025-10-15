@@ -282,6 +282,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const valjAllaBtn = document.getElementById('valj-alla');
     const avvaljAllaBtn = document.getElementById('avvalj-alla');
     
+    // Magnus Ehinger länkar för varje ämnesklass
+    const ehingerLänkar = {
+        'Alkan': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/organiska-molekylers-struktur-och-funktion/kolvaten-alkaner.html',
+        'Alken': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/organiska-molekylers-struktur-och-funktion/alkener.html',
+        'Alkyn': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/organiska-molekylers-struktur-och-funktion/alkyner.html',
+        'Alkohol': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/organiska-molekylers-struktur-och-funktion/alkoholer.html',
+        'Keton': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/mer-om-organiska-reaktioner/aldehyder-och-ketoner.html',
+        'Aldehyd': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/mer-om-organiska-reaktioner/aldehyder-och-ketoner.html',
+        'Karboxylsyra': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/mer-om-organiska-reaktioner/karboxylsyrornas-nomenklatur-mattade-och-omattade-karboxylsyror.html',
+        'Halogenalkan': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/organiska-molekylers-struktur-och-funktion/halogenalkaner.html',
+        'Eter': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/mer-om-organiska-reaktioner/etrar.html',
+        'Ester': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/mer-om-organiska-reaktioner/estrar.html',
+        'Amin': 'https://undervisning.ehinger.nu/amnen/kemi-2/lektioner/mer-om-organiska-reaktioner/aminer.html'
+    };
+    
     // Fyll i checkbox-griden dynamiskt
     kemiskGenerator.data.grupper.forEach(grupp => {
         const div = document.createElement('div');
@@ -326,9 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Engelskt namn:', namnObjekt.en);
         console.log('Svenskt namn:', namnObjekt.sv);
         
-        // Spara namnen i data-attribut
+        // Spara namnen och grupp i data-attribut
         namnDisplay.dataset.enName = namnObjekt.en;
         namnDisplay.dataset.svName = namnObjekt.sv;
+        namnDisplay.dataset.grupp = slumpadGrupp;
         
         // Visa en placeholder istället för svenska namnet
         namnDisplay.textContent = '❓ Vad heter denna förening?';
@@ -337,6 +353,12 @@ document.addEventListener('DOMContentLoaded', () => {
         visaNamnBtn.style.display = 'inline-flex';
         visaNamnBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Visa svenska namn';
         visaNamnBtn.disabled = false;
+        
+        // Ta bort tidigare Ehinger-länk om den finns
+        const befintligLänk = document.querySelector('.ehinger-länk');
+        if (befintligLänk) {
+            befintligLänk.remove();
+        }
 
         // Rendera den nya molekylen
         renderMolekyl(namnObjekt.en);
@@ -348,10 +370,43 @@ document.addEventListener('DOMContentLoaded', () => {
     visaNamnBtn.addEventListener('click', () => {
         // Visa det svenska namnet
         const svensktNamn = namnDisplay.dataset.svName;
+        const grupp = namnDisplay.dataset.grupp;
         if (svensktNamn) {
             namnDisplay.textContent = svensktNamn;
             visaNamnBtn.innerHTML = '<i class="fa-solid fa-check"></i> Avslöjat!';
             visaNamnBtn.disabled = true;
+            
+            // Visa Magnus Ehinger-länk om den finns
+            const ehingerLänk = ehingerLänkar[grupp];
+            if (ehingerLänk) {
+                // Skapa länk-element
+                const länkContainer = document.createElement('div');
+                länkContainer.style.marginTop = '15px';
+                länkContainer.style.textAlign = 'center';
+                
+                const länk = document.createElement('a');
+                länk.href = ehingerLänk;
+                länk.target = '_blank';
+                länk.style.display = 'inline-block';
+                länk.style.padding = '8px 16px';
+                länk.style.backgroundColor = '#007bff';
+                länk.style.color = 'white';
+                länk.style.textDecoration = 'none';
+                länk.style.borderRadius = '5px';
+                länk.style.fontSize = '14px';
+                länk.innerHTML = '<i class="fa-solid fa-external-link-alt"></i> Läs mer om ' + grupp.toLowerCase() + ' hos Magnus Ehinger';
+                
+                länkContainer.appendChild(länk);
+                
+                // Ta bort tidigare länk om den finns
+                const befintligLänk = document.querySelector('.ehinger-länk');
+                if (befintligLänk) {
+                    befintligLänk.remove();
+                }
+                
+                länkContainer.className = 'ehinger-länk';
+                namnDisplay.parentNode.insertBefore(länkContainer, namnDisplay.nextSibling);
+            }
         }
     });
     
@@ -506,6 +561,118 @@ document.addEventListener('DOMContentLoaded', () => {
             Jmol.script(jmolApplet, script);
         }
     }
+
+    // ===================================================================
+    // DEL 4: DISCLAIMER POPUP
+    // ===================================================================
+    
+    function visaDisclaimerPopup() {
+        // Kontrollera om användaren redan har sett disclaimern
+        if (localStorage.getItem('organiskKemiDisclaimer') === 'visad') {
+            return;
+        }
+        
+        // Skapa popup-overlay
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        overlay.style.zIndex = '10000';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.id = 'disclaimer-overlay';
+        
+        // Skapa popup-container
+        const popup = document.createElement('div');
+        popup.style.backgroundColor = 'white';
+        popup.style.padding = '30px';
+        popup.style.borderRadius = '10px';
+        popup.style.maxWidth = '500px';
+        popup.style.margin = '20px';
+        popup.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+        popup.style.position = 'relative';
+        
+        // Titel
+        const title = document.createElement('h2');
+        title.textContent = '⚠️ Viktig information';
+        title.style.marginTop = '0';
+        title.style.color = '#d32f2f';
+        title.style.fontSize = '24px';
+        title.style.marginBottom = '20px';
+        
+        // Meddelande
+        const message = document.createElement('div');
+        message.innerHTML = `
+            <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                <strong>Innehållet i denna tränare är inte verifierat och kan innehålla fel.</strong>
+            </p>
+            <p style="font-size: 14px; line-height: 1.5; color: #666;">
+                Denna tränare genererar kemiska namn och molekylstrukturer för utbildningssyfte. 
+                Alla namn och strukturer bör verifieras mot officiella källor innan användning i akademiska eller professionella sammanhang.
+            </p>
+            <p style="font-size: 14px; line-height: 1.5; color: #666; margin-top: 15px;">
+                <strong>Använd på egen risk.</strong>
+            </p>
+        `;
+        
+        // Knapp-container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.marginTop = '25px';
+        buttonContainer.style.textAlign = 'center';
+        
+        // OK-knapp
+        const okButton = document.createElement('button');
+        okButton.textContent = 'Jag förstår';
+        okButton.style.backgroundColor = '#007bff';
+        okButton.style.color = 'white';
+        okButton.style.border = 'none';
+        okButton.style.padding = '12px 30px';
+        okButton.style.borderRadius = '5px';
+        okButton.style.fontSize = '16px';
+        okButton.style.cursor = 'pointer';
+        okButton.style.fontWeight = 'bold';
+        
+        // Hover-effekt för knapp
+        okButton.addEventListener('mouseenter', () => {
+            okButton.style.backgroundColor = '#0056b3';
+        });
+        okButton.addEventListener('mouseleave', () => {
+            okButton.style.backgroundColor = '#007bff';
+        });
+        
+        // Event listener för knappen
+        okButton.addEventListener('click', () => {
+            // Markera att disclaimern har visats
+            localStorage.setItem('organiskKemiDisclaimer', 'visad');
+            // Ta bort popup
+            overlay.remove();
+        });
+        
+        // Lägg till element
+        buttonContainer.appendChild(okButton);
+        popup.appendChild(title);
+        popup.appendChild(message);
+        popup.appendChild(buttonContainer);
+        overlay.appendChild(popup);
+        
+        // Lägg till i DOM
+        document.body.appendChild(overlay);
+        
+        // Stäng popup om användaren klickar utanför
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                localStorage.setItem('organiskKemiDisclaimer', 'visad');
+                overlay.remove();
+            }
+        });
+    }
+    
+    // Visa disclaimer popup när sidan laddas
+    visaDisclaimerPopup();
 
     // Starta JSmol
     jmolContainer.innerHTML = Jmol.getAppletHtml("jmolApplet0", JmolInfo);
