@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const stam2 = this.slumpaElement(this.data.stammar);
                 const alkyls_sv = [`${stam1.stam.sv.toLowerCase()}${this.data.suffix.yl.sv}`, `${stam2.stam.sv.toLowerCase()}${this.data.suffix.yl.sv}`].sort();
                 const alkyls_en = [`${stam1.stam.en.toLowerCase()}${this.data.suffix.yl.en}`, `${stam2.stam.en.toLowerCase()}${this.data.suffix.yl.en}`].sort();
-                const namn_sv = `${alkyls_sv[0]} ${alkyls_sv[1]} ${this.data.suffix.eter.sv}`;
-                const namn_en = `${alkyls_en[0]} ${alkyls_en[1]} ${this.data.suffix.eter.en}`;
+                const namn_sv = `${alkyls_sv[0]}${alkyls_sv[1]}${this.data.suffix.eter.sv}`;
+                const namn_en = `${alkyls_en[0]}${alkyls_en[1]}${this.data.suffix.eter.en}`;
                 return {
                     sv: namn_sv.charAt(0).toUpperCase() + namn_sv.slice(1),
                     en: namn_en.charAt(0).toUpperCase() + namn_en.slice(1)
@@ -213,6 +213,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 substituenter.push({ position, namn: sub.namn });
             }
+
+            // IUPAC-regel: numrera från det håll som ger lägsta nummer för substituenter
+            // Om position > grund.c/2, konvertera till motsvarande lägre position
+            substituenter.forEach(sub => {
+                if (sub.position > Math.ceil(grund.c / 2)) {
+                    sub.position = grund.c - sub.position + 1;
+                }
+            });
 
             // Montera namnet
             const subGrupper = {};
