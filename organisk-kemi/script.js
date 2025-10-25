@@ -416,7 +416,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 namnDisplay.parentNode.insertBefore(länkContainer, namnDisplay.nextSibling);
             }
 
-            const chatgptLänk = ("https://chat.openai.com/?q=", svensktNamn);
+            const chatgptLänk = ("https://chat.openai.com/?q=Förklara%20den%20systatiska%20namngivningen%20av%20följande%20organsiska%20förening,%20enligt%20IUPAC:" + svensktNamn);
+            console.log("ChatGPT-länk:", chatgptLänk);
             if (chatgptLänk) {
                 // Skapa länk-element
                 const länkContainer = document.createElement('div');
