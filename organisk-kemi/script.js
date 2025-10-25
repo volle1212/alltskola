@@ -415,6 +415,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 länkContainer.className = 'ehinger-länk';
                 namnDisplay.parentNode.insertBefore(länkContainer, namnDisplay.nextSibling);
             }
+
+            const chatgptLänk = ehingerLänkar[svensktNamn];
+            if (chatgptLänk) {
+                // Skapa länk-element
+                const länkContainer = document.createElement('div');
+                länkContainer.style.marginTop = '15px';
+                länkContainer.style.textAlign = 'center';
+                
+                const länk = document.createElement('a');
+                länk.href = chatgptLänk;
+                länk.target = '_blank';
+                länk.style.display = 'inline-block';
+                länk.style.padding = '8px 16px';
+                länk.style.backgroundColor = '#007bff';
+                länk.style.color = 'white';
+                länk.style.textDecoration = 'none';
+                länk.style.borderRadius = '5px';
+                länk.style.fontSize = '14px';
+                länk.innerHTML = '<i class="fa-solid fa-comment"></i> Fråga ChatGPT om' + svensktNamn.toLowerCase() + '';
+                
+                länkContainer.appendChild(länk);
+                
+                // Ta bort tidigare länk om den finns
+                const befintligLänk = document.querySelector('.chatgpt-länk');
+                if (befintligLänk) {
+                    befintligLänk.remove();
+                }
+                
+                länkContainer.className = 'chatgpt-länk';
+                namnDisplay.parentNode.insertBefore(länkContainer, namnDisplay.nextSibling);
+            }
         }
     });
     
