@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 namnDisplay.parentNode.insertBefore(länkContainer, namnDisplay.nextSibling);
             }
 
-            const chatgptLänk = ehingerLänkar[svensktNamn];
+            const chatgptLänk = ("https://chat.openai.com/?q=", svensktNamn);
             if (chatgptLänk) {
                 // Skapa länk-element
                 const länkContainer = document.createElement('div');
