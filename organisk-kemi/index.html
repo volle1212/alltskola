@@ -33,12 +33,44 @@
                 </div>
         </fieldset>
 
+        <div class="läge-val">
+            <label>
+                <input type="checkbox" id="gissningsläge-checkbox">
+                Aktivera gissningsläge (gissa namnet innan du ser svaret)
+            </label>
+        </div>
+
         <div class="uppgift-container">
             <h2 id="kemiskt-namn" data-en-name="" data-sv-name="">Välj en grupp och klicka på "Generera"</h2>
-            <button id="visa-namn-btn" class="visa-namn-knapp" style="display: none;">
-                <i class="fa-solid fa-eye"></i> Visa svenska namn
-            </button>
+            
+            <div id="gissning-container">
+                <div>
+                    <input 
+                        type="text" 
+                        id="gissning-input" 
+                        placeholder="Skriv ditt gissade systematiska namn här..."
+                    />
+                </div>
+                <div class="button-container">
+                    <button id="gissa-btn" class="visa-namn-knapp">
+                        <i class="fa-solid fa-paper-plane"></i> Gissa
+                    </button>
+                    <button id="visa-namn-btn" class="visa-namn-knapp">
+                        <i class="fa-solid fa-eye"></i> Visa svenska namn
+                    </button>
+                </div>
+            </div>
+            
+            <div id="feedback-container"></div>
+
+            <div class="dolt-namn-container">
+                <button id="visa-dolt-namn-btn" class="visa-namn-knapp">
+                    <i class="fa-solid fa-eye-slash"></i> Visa dolt namn
+                </button>
+            </div>
         </div>
+
+
 
         <div id="jmol-container">
             <!-- JSmol-renderingen kommer att hamna här -->

@@ -117,11 +117,32 @@ document.addEventListener('DOMContentLoaded', () => {
                             en: `tri${alkyl1.namn.en.toLowerCase()}amine`
                         };
                     } else {
-                        // Sortera alfabetiskt
-                        const alkyls = [alkyl1, alkyl2, alkyl3].sort((a, b) => a.namn.sv.localeCompare(b.namn.sv));
+                        // Gruppera alkylgrupper och räkna antal av varje typ
+                        const alkylGrupper = [alkyl1, alkyl2, alkyl3];
+                        const gruppRäknare = {};
+                        
+                        alkylGrupper.forEach(alkyl => {
+                            const namn = alkyl.namn.sv;
+                            gruppRäknare[namn] = (gruppRäknare[namn] || 0) + 1;
+                        });
+                        
+                        // Skapa namn med korrekt prefix (di-, tri-)
+                        const namnDelar = [];
+                        Object.keys(gruppRäknare).sort().forEach(alkylNamn => {
+                            const antal = gruppRäknare[alkylNamn];
+                            const alkyl = alkylGrupper.find(a => a.namn.sv === alkylNamn);
+                            if (antal === 1) {
+                                namnDelar.push(alkyl.namn.sv.toLowerCase());
+                            } else if (antal === 2) {
+                                namnDelar.push(`di${alkyl.namn.sv.toLowerCase()}`);
+                            } else if (antal === 3) {
+                                namnDelar.push(`tri${alkyl.namn.sv.toLowerCase()}`);
+                            }
+                        });
+                        
                         return {
-                            sv: `${alkyls[0].namn.sv.toLowerCase()}${alkyls[1].namn.sv.toLowerCase()}${alkyls[2].namn.sv.toLowerCase()}amin`,
-                            en: `${alkyls[0].namn.en.toLowerCase()}${alkyls[1].namn.en.toLowerCase()}${alkyls[2].namn.en.toLowerCase()}amine`
+                            sv: `${namnDelar.join('')}amin`,
+                            en: `${namnDelar.join('')}amine`
                         };
                     }
                 }
@@ -179,9 +200,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // Detta följer IUPAC-regeln att substituenter på kedjeslutet ska räknas in i huvudkedjan
             ledigaPositioner = ledigaPositioner.filter(p => p !== grund.c);
             
+            // Ta bort huvudgruppens position om den finns (förhindra substituenter på samma position)
+            if (huvudgruppPos !== null) {
+                ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos);
+            }
+            
             // Välj och placera substituenter
             const antalSubstituenter = grupp === 'Halogenalkan' ? this.slumpaTal(1, 2) : this.slumpaTal(0, 2);
             if (antalSubstituenter > ledigaPositioner.length) return this.genereraEttNamn(grupp);
+            
+            // Ytterligare kontroll: se till att vi inte försöker placera fler substituenter än möjligt
+            if (ledigaPositioner.length === 0 && antalSubstituenter > 0) return this.genereraEttNamn(grupp);
 
             const substituenter = [];
             for (let i = 0; i < antalSubstituenter; i++) {
@@ -190,6 +219,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let subTyp = this.slumpaElement(['halogen', 'alkyl']);
                 if (grupp === 'Halogenalkan') subTyp = 'halogen';
+                
+                // Kontrollera att positionen inte skapar omöjliga strukturer
+                // Om huvudgruppen är på närliggande position, kontrollera att substituenten inte skapar konflikt
+                if (huvudgruppPos !== null && Math.abs(position - huvudgruppPos) === 1) {
+                    // Om substituenten är på närliggande position till huvudgruppen, 
+                    // kontrollera att det inte skapar omöjliga strukturer
+                    if (subTyp === 'alkyl') {
+                        // För alkylgrupper på närliggande positioner, använd bara små alkylgrupper
+                        const tillgangligaAlkylgrupper = this.data.alkylgrupper.filter(a => a.c <= 1);
+                        if (tillgangligaAlkylgrupper.length === 0) {
+                            subTyp = 'halogen'; // Använd halogen istället om inga små alkylgrupper finns
+                        }
+                    }
+                }
                 
                 let sub;
                 if (subTyp === 'halogen') {
@@ -286,6 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const namnDisplay = document.getElementById('kemiskt-namn');
     const generateBtn = document.getElementById('generate-btn');
     const visaNamnBtn = document.getElementById('visa-namn-btn');
+    const gissaBtn = document.getElementById('gissa-btn');
+    const gissningInput = document.getElementById('gissning-input');
+    const gissningContainer = document.getElementById('gissning-container');
+    const feedbackContainer = document.getElementById('feedback-container');
     const checkboxGrid = document.querySelector('.checkbox-grid');
     const valjAllaBtn = document.getElementById('valj-alla');
     const avvaljAllaBtn = document.getElementById('avvalj-alla');
@@ -354,18 +401,45 @@ document.addEventListener('DOMContentLoaded', () => {
         namnDisplay.dataset.svName = namnObjekt.sv;
         namnDisplay.dataset.grupp = slumpadGrupp;
         
-        // Visa en placeholder istället för svenska namnet
-        namnDisplay.textContent = '❓ Vad heter denna förening?';
+        // Kontrollera om gissningsläge är aktiverat
+        const gissningslägeCheckbox = document.getElementById('gissningsläge-checkbox');
+        const ärGissningsläge = gissningslägeCheckbox.checked;
         
-        // Visa knappen för att avslöja namnet
-        visaNamnBtn.style.display = 'inline-flex';
-        visaNamnBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Visa svenska namn';
-        visaNamnBtn.disabled = false;
+        if (ärGissningsläge) {
+            // Gissningsläge - visa placeholder och gissningsfält
+            namnDisplay.textContent = '❓ Vad heter denna förening?';
+            
+            // Visa gissningsfältet och återställ det
+            gissningContainer.style.display = 'block';
+            gissningInput.value = '';
+            gissningInput.focus();
+            gissningInput.disabled = false;
+            gissaBtn.disabled = false;
+            gissaBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gissa';
+            visaNamnBtn.style.display = 'none';
+        } else {
+            // Direktläge - dölj namnet och visa "Visa svenska namn"-knappen
+            namnDisplay.textContent = '❓ Vad heter denna förening?';
+            
+            // Dölj gissningsfältet och visa "Visa svenska namn"-knappen
+            gissningContainer.style.display = 'none';
+            visaNamnBtn.style.display = 'inline-block';
+            visaNamnBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Visa svenska namn';
+            visaNamnBtn.disabled = false;
+        }
         
-        // Ta bort tidigare Ehinger-länk om den finns
-        const befintligLänk = document.querySelector('.ehinger-länk');
-        if (befintligLänk) {
-            befintligLänk.remove();
+        // Rensa feedback
+        feedbackContainer.innerHTML = '';
+        
+        // Återställ "Visa dolt namn"-knappen
+        const visaDoltNamnBtn = document.getElementById('visa-dolt-namn-btn');
+        visaDoltNamnBtn.disabled = false;
+        visaDoltNamnBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Visa dolt namn';
+        
+        // Ta bort tidigare länkar
+        const befintligaLänkar = document.querySelector('.länk-container');
+        if (befintligaLänkar) {
+            befintligaLänkar.remove();
         }
 
         // Rendera den nya molekylen
@@ -374,6 +448,144 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event listeners
     generateBtn.addEventListener('click', genereraNyttNamn);
+    
+    // Gissningsfunktionalitet
+    gissaBtn.addEventListener('click', () => {
+        const gissning = gissningInput.value.trim();
+        const korrektNamn = namnDisplay.dataset.svName;
+        
+        if (!gissning) {
+            feedbackContainer.innerHTML = '<p style="color: #ff9800; font-weight: 600;">⚠️ Skriv din gissning först!</p>';
+            return;
+        }
+        
+        // Normalisera båda strängarna för jämförelse (lowercase, ta bort extra mellanslag)
+        const normaliseradGissning = gissning.toLowerCase().replace(/\s+/g, ' ').trim();
+        const normaliseratKorrekt = korrektNamn.toLowerCase().replace(/\s+/g, ' ').trim();
+        
+        if (normaliseradGissning === normaliseratKorrekt) {
+            // Rätt svar!
+            feedbackContainer.innerHTML = `
+                <div style="background-color: #e8f5e9; border: 2px solid #4caf50; border-radius: 8px; padding: 1rem; text-align: center;">
+                    <p style="color: #2e7d32; font-weight: 700; font-size: 1.2rem; margin: 0;">
+                        <i class="fa-solid fa-check-circle"></i> Rätt svar!
+                    </p>
+                </div>
+            `;
+            
+            // Visa svensk namnet i huvuddisplayen också
+            namnDisplay.textContent = korrektNamn;
+            
+            // Inaktivera input och visa "Visa svenska namn"-knappen
+            gissningInput.disabled = true;
+            gissaBtn.disabled = true;
+            visaNamnBtn.style.display = 'none';
+            
+            // Visa länkarna direkt efter rätt svar
+            visaLänkar(namnDisplay.dataset.grupp, korrektNamn);
+        } else {
+            // Fel svar - visa det korrekta svaret
+            feedbackContainer.innerHTML = `
+                <div style="background-color: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 1rem; text-align: center;">
+                    <p style="color: #c62828; font-weight: 700; margin: 0 0 0.5rem 0;">
+                        <i class="fa-solid fa-times-circle"></i> Du hade fel!
+                    </p>
+                    <p style="color: #c62828; margin: 0; font-size: 0.9rem;">
+                        Din gissning: <strong>${gissning}</strong>
+                    </p>
+                </div>
+            `;
+            
+            // Visa svenska namnet i huvuddisplayen
+            namnDisplay.textContent = korrektNamn;
+            
+            // Inaktivera input och gissningsknapp
+            gissningInput.disabled = true;
+            gissaBtn.disabled = true;
+            visaNamnBtn.style.display = 'none';
+            
+            // Visa länkarna med modifierad ChatGPT-länk
+            visaLänkar(namnDisplay.dataset.grupp, korrektNamn, gissning);
+        }
+    });
+    
+    // Tillåt Enter-tangent för att gissa
+    gissningInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            gissaBtn.click();
+        }
+    });
+    
+    // Funktion för att visa länkar
+    function visaLänkar(grupp, svensktNamn, felGissning = null) {
+        // Ta bort tidigare länkar om de finns
+        const befintligaLänkar = document.querySelector('.länk-container');
+        if (befintligaLänkar) {
+            befintligaLänkar.remove();
+        }
+        
+        // Skapa en gemensam container för båda länkarna
+        const länkContainer = document.createElement('div');
+        länkContainer.className = 'länk-container';
+        länkContainer.style.marginTop = '15px';
+        länkContainer.style.textAlign = 'center';
+        länkContainer.style.display = 'flex';
+        länkContainer.style.gap = '10px';
+        länkContainer.style.justifyContent = 'center';
+        länkContainer.style.flexWrap = 'wrap';
+        
+        // Visa Magnus Ehinger-länk om den finns
+        const ehingerLänk = ehingerLänkar[grupp];
+        if (ehingerLänk) {
+            const länk = document.createElement('a');
+            länk.href = ehingerLänk;
+            länk.target = '_blank';
+            länk.style.display = 'inline-block';
+            länk.style.padding = '8px 16px';
+            länk.style.backgroundColor = '#007bff';
+            länk.style.color = 'white';
+            länk.style.textDecoration = 'none';
+            länk.style.borderRadius = '5px';
+            länk.style.fontSize = '14px';
+            länk.innerHTML = '<i class="fa-solid fa-external-link-alt"></i> Läs mer om ' + grupp.toLowerCase() + ' hos Magnus Ehinger';
+            
+            länkContainer.appendChild(länk);
+        }
+
+        // Lägg till ChatGPT-länk
+        let chatgptLänk;
+        let länkText;
+        
+        if (felGissning) {
+            // Om användaren gissade fel, fråga varför det korrekta namnet inte kallas för deras gissning
+            chatgptLänk = `https://chat.openai.com/?q=Varför%20kallas%20${encodeURIComponent(svensktNamn)}%20inte%20för%20${encodeURIComponent(felGissning)}?%20Förklara%20skillnaden%20mellan%20dessa%20namn%20i%20organisk%20kemi.`;
+            länkText = `Fråga ChatGPT varför <i>${svensktNamn.toLowerCase()}</i> inte kallas för <i>${felGissning.toLowerCase()}</i>`;
+        } else {
+            // Normal länk för rätt svar
+            chatgptLänk = `https://chat.openai.com/?q=Förklara%20den%20systematiska%20namngivningen%20av%20följande%20organiska%20förening,%20enligt%20IUPAC:%20${encodeURIComponent(svensktNamn)}`;
+            länkText = `Fråga ChatGPT om namngivningen för <i>${svensktNamn.toLowerCase()}</i>`;
+        }
+        
+        if (chatgptLänk) {
+            const länk = document.createElement('a');
+            länk.href = chatgptLänk;
+            länk.target = '_blank';
+            länk.style.display = 'inline-block';
+            länk.style.padding = '8px 16px';
+            länk.style.backgroundColor = '#007bff';
+            länk.style.color = 'white';
+            länk.style.textDecoration = 'none';
+            länk.style.borderRadius = '5px';
+            länk.style.fontSize = '14px';
+            länk.innerHTML = '<i class="fa-solid fa-comment"></i> ' + länkText;
+            
+            länkContainer.appendChild(länk);
+        }
+        
+        // Lägg till container efter namnDisplay
+        const uppgiftContainer = namnDisplay.parentNode;
+        uppgiftContainer.insertBefore(länkContainer, uppgiftContainer.lastElementChild);
+    }
     
     visaNamnBtn.addEventListener('click', () => {
         // Visa det svenska namnet
@@ -384,69 +596,18 @@ document.addEventListener('DOMContentLoaded', () => {
             visaNamnBtn.innerHTML = '<i class="fa-solid fa-check"></i> Avslöjat!';
             visaNamnBtn.disabled = true;
             
-            // Visa Magnus Ehinger-länk om den finns
-            const ehingerLänk = ehingerLänkar[grupp];
-            if (ehingerLänk) {
-                // Skapa länk-element
-                const länkContainer = document.createElement('div');
-                länkContainer.style.marginTop = '15px';
-                länkContainer.style.textAlign = 'center';
-                
-                const länk = document.createElement('a');
-                länk.href = ehingerLänk;
-                länk.target = '_blank';
-                länk.style.display = 'inline-block';
-                länk.style.padding = '8px 16px';
-                länk.style.backgroundColor = '#007bff';
-                länk.style.color = 'white';
-                länk.style.textDecoration = 'none';
-                länk.style.borderRadius = '5px';
-                länk.style.fontSize = '14px';
-                länk.innerHTML = '<i class="fa-solid fa-external-link-alt"></i> Läs mer om ' + grupp.toLowerCase() + ' hos Magnus Ehinger';
-                
-                länkContainer.appendChild(länk);
-                
-                // Ta bort tidigare länk om den finns
-                const befintligLänk = document.querySelector('.ehinger-länk');
-                if (befintligLänk) {
-                    befintligLänk.remove();
-                }
-                
-                länkContainer.className = 'ehinger-länk';
-                namnDisplay.parentNode.insertBefore(länkContainer, namnDisplay.nextSibling);
-            }
-
-            const chatgptLänk = ("https://chat.openai.com/?q=Förklara%20den%20systatiska%20namngivningen%20av%20följande%20organsiska%20förening,%20enligt%20IUPAC:" + svensktNamn);
-            console.log("ChatGPT-länk:", chatgptLänk);
-            if (chatgptLänk) {
-                // Skapa länk-element
-                const länkContainer = document.createElement('div');
-                länkContainer.style.marginTop = '15px';
-                länkContainer.style.textAlign = 'center';
-                
-                const länk = document.createElement('a');
-                länk.href = chatgptLänk;
-                länk.target = '_blank';
-                länk.style.display = 'inline-block';
-                länk.style.padding = '8px 16px';
-                länk.style.backgroundColor = '#007bff';
-                länk.style.color = 'white';
-                länk.style.textDecoration = 'none';
-                länk.style.borderRadius = '5px';
-                länk.style.fontSize = '14px';
-                länk.innerHTML = '<i class="fa-solid fa-comment"></i> Fråga ChatGPT om' + svensktNamn.toLowerCase() + '';
-                
-                länkContainer.appendChild(länk);
-                
-                // Ta bort tidigare länk om den finns
-                const befintligLänk = document.querySelector('.chatgpt-länk');
-                if (befintligLänk) {
-                    befintligLänk.remove();
-                }
-                
-                länkContainer.className = 'chatgpt-länk';
-                namnDisplay.parentNode.insertBefore(länkContainer, namnDisplay.nextSibling);
-            }
+            // Dölj gissningsfältet och visa feedback
+            gissningContainer.style.display = 'none';
+            feedbackContainer.innerHTML = `
+                <div style="background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 1rem; text-align: center;">
+                    <p style="color: #856404; font-weight: 600; margin: 0;">
+                        <i class="fa-solid fa-lightbulb"></i> Rätt svar: <strong>${svensktNamn}</strong>
+                    </p>
+                </div>
+            `;
+            
+            // Visa länkarna
+            visaLänkar(grupp, svensktNamn);
         }
     });
     
@@ -456,6 +617,53 @@ document.addEventListener('DOMContentLoaded', () => {
     
     avvaljAllaBtn.addEventListener('click', () => {
         checkboxes.forEach(cb => cb.checked = false);
+    });
+
+    // Event listener för gissningsläge-checkbox
+    const gissningslägeCheckbox = document.getElementById('gissningsläge-checkbox');
+    gissningslägeCheckbox.addEventListener('change', () => {
+        // Om det redan finns ett genererat namn, uppdatera displayen
+        if (namnDisplay.dataset.svName) {
+            const ärGissningsläge = gissningslägeCheckbox.checked;
+            
+            if (ärGissningsläge) {
+                // Växla till gissningsläge
+                namnDisplay.textContent = '❓ Vad heter denna förening?';
+                gissningContainer.style.display = 'block';
+                gissningInput.value = '';
+                gissningInput.disabled = false;
+                gissaBtn.disabled = false;
+                gissaBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gissa';
+                visaNamnBtn.style.display = 'none';
+                feedbackContainer.innerHTML = '';
+            } else {
+                // Växla till direktläge
+                namnDisplay.textContent = '❓ Vad heter denna förening?';
+                gissningContainer.style.display = 'none';
+                visaNamnBtn.style.display = 'inline-block';
+                visaNamnBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Visa svenska namn';
+                visaNamnBtn.disabled = false;
+                feedbackContainer.innerHTML = '';
+            }
+        }
+    });
+
+    // Event listener för "Visa dolt namn"-knappen
+    const visaDoltNamnBtn = document.getElementById('visa-dolt-namn-btn');
+    visaDoltNamnBtn.addEventListener('click', () => {
+        const svensktNamn = namnDisplay.dataset.svName;
+        if (svensktNamn) {
+            // Visa det svenska namnet
+            namnDisplay.textContent = svensktNamn;
+            
+            // Inaktivera knappen efter att namnet har visats
+            visaDoltNamnBtn.disabled = true;
+            visaDoltNamnBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Namnet visas';
+            
+            // Visa länkarna
+            const grupp = namnDisplay.dataset.grupp;
+            visaLänkar(grupp, svensktNamn);
+        }
     });
 
     // ===================================================================
@@ -506,7 +714,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'methanol': 'methyl alcohol',
         'ethanol': 'ethyl alcohol',
         'propanol': 'propyl alcohol',
-        '2-propanol': 'isopropyl alcohol',
         // Estrar (vanliga) - utan mellanrum
         'methylmethanoate': 'methyl formate',
         'ethylmethanoate': 'ethyl formate',

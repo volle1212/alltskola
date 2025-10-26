@@ -190,3 +190,67 @@ h1 .fa-flask-vial {
     margin-top: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
+
+/* Läge-val sektion */
+.läge-val {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.läge-val label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+}
+
+.läge-val input[type="checkbox"] {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+/* Gissning container */
+#gissning-container {
+    display: none;
+    width: 100%;
+    max-width: 600px;
+}
+
+#gissning-container > div {
+    margin-bottom: 1rem;
+}
+
+#gissning-input {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+    border: 2px solid #dce4ec;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+}
+
+#gissning-container .button-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#visa-namn-btn {
+    display: none;
+}
+
+#feedback-container {
+    margin-top: 1rem;
+}
+
+/* Dolt namn container */
+.dolt-namn-container {
+    text-align: center;
+    margin-top: 0;
+}
