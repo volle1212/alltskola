@@ -354,37 +354,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Funktion för att konvertera Markdown till HTML
     function markdownTillHTML(text) {
-        // Escapa HTML-tecken först (förutom de vi själva lägger till)
         let html = text;
 
-        // Konvertera ### Headers till <h3>
+        // Konvertera **bold** till <strong> (gör före italic)
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+        // Konvertera *italic* till <em>
+        html = html.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+
+        // Konvertera headers
         html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
         html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
         html = html.replace(/^# (.+)$/gm, '<h3>$1</h3>');
 
-        // Konvertera **bold** till <strong>
-        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // Konvertera numrerade listor (1. 2. 3.)
+        const lines = html.split('\n');
+        let inOrderedList = false;
+        let result = [];
 
-        // Konvertera *italic* till <em>
-        html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const orderedMatch = line.match(/^(\d+)\.\s+(.+)$/);
+            const unorderedMatch = line.match(/^[-*]\s+(.+)$/);
 
-        // Konvertera listor med - eller * till <ul><li>
-        html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
-        html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+            if (orderedMatch) {
+                if (!inOrderedList) {
+                    result.push('<ol>');
+                    inOrderedList = true;
+                }
+                result.push(`<li>${orderedMatch[2]}</li>`);
+            } else if (unorderedMatch) {
+                if (inOrderedList) {
+                    result.push('</ol>');
+                    inOrderedList = false;
+                }
+                result.push(`<li>${unorderedMatch[1]}</li>`);
+            } else {
+                if (inOrderedList) {
+                    result.push('</ol>');
+                    inOrderedList = false;
+                }
+                result.push(line);
+            }
+        }
 
-        // Konvertera numrerade listor
-        html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+        if (inOrderedList) {
+            result.push('</ol>');
+        }
+
+        html = result.join('\n');
+
+        // Wrappa unordered list items i <ul>
+        html = html.replace(/(<li>(?!.*<ol>).*?<\/li>\n?)+/g, (match) => {
+            // Kontrollera om det redan är i en <ol>
+            if (!match.includes('<ol>')) {
+                return '<ul>' + match + '</ul>';
+            }
+            return match;
+        });
 
         // Konvertera dubbla radbrytningar till paragraf
-        html = html.replace(/\n\n/g, '</p><p>');
+        html = html.replace(/\n\n+/g, '</p><p>');
 
-        // Konvertera enkla radbrytningar till <br>
-        html = html.replace(/\n/g, '<br>');
+        // Konvertera enkla radbrytningar till <br> (utom runt block-element)
+        html = html.replace(/\n(?!<\/?(?:ul|ol|li|h\d|p))/g, '<br>');
 
         // Wrappa i paragraf om det inte redan finns block-element
-        if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<p')) {
+        if (!html.match(/^<(?:h\d|ul|ol|p)/)) {
             html = '<p>' + html + '</p>';
         }
+
+        // Rensa upp överflödiga <br> runt listor
+        html = html.replace(/<br>\s*<\/(ul|ol)>/g, '</$1>');
+        html = html.replace(/<(ul|ol)>\s*<br>/g, '<$1>');
 
         return html;
     }
@@ -769,12 +811,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (felGissning) {
             // Om användaren gissade fel, fråga varför det korrekta namnet inte kallas för deras gissning
-            geminiPrompt = `Förklara kort (max 250 ord, får gärna vara kortare) varför "${svensktNamn}" INTE kallas "${felGissning}" enligt IUPAC. Fokusera på skillnaden mellan namnen. Använd Markdown-formatering (**, *, ###, listor). Svara på svenska.`;
+            geminiPrompt = `Förklara kort (max 250 ord, får vara kortare) varför "${svensktNamn}" INTE kallas "${felGissning}" enligt IUPAC. Fokusera på skillnaden mellan namnen. Svara på svenska med tydlig struktur.`;
             länkText = `Varför kallas <i>${svensktNamn.toLowerCase()}</i> inte för <i>${felGissning.toLowerCase()}</i>?`;
             knappText = `Fråga Google Gemini varför namnet är fel`;
         } else {
             // Normal prompt för rätt svar
-            geminiPrompt = `Förklara IUPAC-namnet "${svensktNamn}" kortfattat (max 250 ord, får gärna vara kortare). Bryt ner: 1) Huvudkedjan, 2) Funktionell grupp, 3) Positioner/substituenter. Använd Markdown-formatering (**, *, ###, listor). Svara på svenska.`;
+            geminiPrompt = `Förklara IUPAC-namnet "${svensktNamn}" kortfattat (max 250 ord, får vara kortare). Bryt ner: 1) Huvudkedjan, 2) Funktionell grupp, 3) Positioner/substituenter. Svara på svenska med tydlig struktur.`;
             länkText = `Förklaring av namngivningen för <i>${svensktNamn.toLowerCase()}</i>`;
             knappText = `Fråga Google Gemini om namngivningen`;
         }
@@ -917,85 +959,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Mappning för triviala namn (ökar chansen att JSmol hittar molekylen)
-    const trivialtNamnMapping = {
-        // Karboxylsyror
-        'methanoic acid': 'formic acid',
-        'ethanoic acid': 'acetic acid',
-        'propanoic acid': 'propionic acid',
-        'butanoic acid': 'butyric acid',
-        'pentanoic acid': 'valeric acid',
-        'hexanoic acid': 'caproic acid',
-        'heptanoic acid': 'enanthic acid',
-        'octanoic acid': 'caprylic acid',
-        // Aldehyder
-        'methanal': 'formaldehyde',
-        'ethanal': 'acetaldehyde',
-        'propanal': 'propionaldehyde',
-        'butanal': 'butyraldehyde',
-        // Ketoner
-        'propanone': 'acetone',
-        '2-butanone': 'methyl ethyl ketone',
-        // Alkoholer (vanliga)
-        'methanol': 'methyl alcohol',
-        'ethanol': 'ethyl alcohol',
-        'propanol': 'propyl alcohol',
-        // Estrar (vanliga) - utan mellanrum
-        'methylmethanoate': 'methyl formate',
-        'ethylmethanoate': 'ethyl formate',
-        'methylethanoate': 'methyl acetate',
-        'ethylethanoate': 'ethyl acetate',
-        'propylethanoate': 'propyl acetate',
-        'butylethanoate': 'butyl acetate',
-        'pentylethanoate': 'pentyl acetate',
-        'hexylethanoate': 'hexyl acetate',
-        'heptylethanoate': 'heptyl acetate',
-        'octylethanoate': 'octyl acetate',
-        'nonyloctanoate': 'nonyl octanoate',
-        'octyloctanoate': 'octyl octanoate',
-        'heptylheptanoate': 'heptyl heptanoate',
-        'hexylhexanoate': 'hexyl hexanoate',
-        'pentylpentanoate': 'pentyl pentanoate',
-        'butylbutanoate': 'butyl butanoate',
-        'propylpropanoate': 'propyl propanoate',
-        'ethylethanoate': 'ethyl acetate',
-        'methylmethanoate': 'methyl formate',
-        // Aminer (vanliga trivialnamn)
-        'metylamin': 'methylamine',
-        'etylamin': 'ethylamine',
-        'propylamin': 'propylamine',
-        'butylamin': 'butylamine',
-        'pentylamin': 'pentylamine',
-        'hexylamin': 'hexylamine',
-        'dimetylamin': 'dimethylamine',
-        'dietylamin': 'diethylamine',
-        'dipropylamin': 'dipropylamine',
-        'trimetylamin': 'trimethylamine',
-        'trietylamin': 'triethylamine',
-        'metyletylamin': 'methylethylamine',
-        'metylpropylamin': 'methylpropylamine',
-        'etylpropylamin': 'ethylpropylamine'
-    };
-
-    function getMolekylIdentifier(namn) {
-        // Försök först med trivialt namn om det finns
-        const trivialNamn = trivialtNamnMapping[namn.toLowerCase()];
-        if (trivialNamn) {
-            return trivialNamn;
-        }
-        return namn;
-    }
+    // JSmol försöker ladda molekyler med systematiska IUPAC-namn direkt
+    // Om det inte fungerar, använder vi NCI resolver som fallback
 
     async function renderMolekyl(namn) {
         if (!jmolApplet || !namn) return;
-        
+
         console.log(`🧪 Rendering: ${namn}`);
-        
-        // Försök först med trivialt/systematiskt namn
-        const molekylId = getMolekylIdentifier(namn);
-        console.log(`Försöker med: ${molekylId}`);
-        
-        let script = `load $${molekylId}; spin off;`;
+
+        // Använd systematiskt IUPAC-namn direkt
+        let script = `load $${namn}; spin off;`;
         Jmol.script(jmolApplet, script);
         
         // Kontrollera om det gick bra genom att se om molekylen laddades
@@ -1003,7 +976,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(async () => {
             const atomCount = Jmol.evaluateVar(jmolApplet, 'atomCount');
             if (atomCount === 0 || atomCount === null) {
-                console.warn(`⚠️ Kunde inte ladda "${molekylId}", försöker med NCI resolver...`);
+                console.warn(`⚠️ Kunde inte ladda "${namn}", försöker med NCI resolver...`);
                 await tryNCIResolver(namn);
             } else {
                 console.log(`✅ Molekyl laddad (${atomCount} atomer)`);

@@ -421,20 +421,44 @@ h1 .fa-flask-vial {
     color: #555;
 }
 
-.gemini-text ul {
-    margin: 0.5rem 0;
-    padding-left: 2rem;
+.gemini-text ul,
+.gemini-text ol {
+    margin: 0.8rem 0;
+    padding-left: 2.5rem;
     list-style-position: outside;
 }
 
+.gemini-text ul {
+    list-style-type: disc;
+}
+
+.gemini-text ol {
+    list-style-type: decimal;
+}
+
 .gemini-text li {
+    margin: 0.5rem 0;
+    line-height: 1.7;
+    padding-left: 0.5rem;
+}
+
+/* Nested listor */
+.gemini-text ul ul,
+.gemini-text ol ul {
     margin: 0.3rem 0;
-    line-height: 1.6;
-    padding-left: 0.3rem;
+    padding-left: 2rem;
+    list-style-type: circle;
+}
+
+.gemini-text ul ol,
+.gemini-text ol ol {
+    margin: 0.3rem 0;
+    padding-left: 2rem;
 }
 
 .gemini-text p {
-    margin: 0.5rem 0;
+    margin: 0.7rem 0;
+    line-height: 1.6;
 }
 
 /* Prompt toggle-knapp */
