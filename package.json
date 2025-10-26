@@ -1,7 +1,7 @@
 {
   "name": "alltskola",
-  "version": "1.0.0",
-  "description": "Swedish educational web application with interactive practice modules",
+  "version": "1.0.1",
+  "description": "Swedish educational web application with interactive practice modules - now with Google Gemini AI integration",
   "private": true,
   "scripts": {
     "dev": "vercel dev",
