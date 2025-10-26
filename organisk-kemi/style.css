@@ -398,7 +398,7 @@ h1 .fa-flask-vial {
     color: #333;
     font-size: 1rem;
     margin-top: 1rem;
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     background-color: #f9f9f9;
     border-radius: 8px;
     border-left: 4px solid var(--primary-action);
@@ -423,12 +423,14 @@ h1 .fa-flask-vial {
 
 .gemini-text ul {
     margin: 0.5rem 0;
-    padding-left: 1.5rem;
+    padding-left: 2rem;
+    list-style-position: outside;
 }
 
 .gemini-text li {
     margin: 0.3rem 0;
     line-height: 1.6;
+    padding-left: 0.3rem;
 }
 
 .gemini-text p {

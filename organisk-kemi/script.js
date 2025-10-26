@@ -166,25 +166,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Enligt IUPAC: numrera från det håll som ger lägsta nummer
                     huvudgruppPos = this.slumpaTal(1, Math.ceil((grund.c - 1) / 2));
                     suffixKey = 'en';
-                    ledigaPositioner = ledigaPositioner.filter(p => p !== 1);
+                    // Blockera båda positioner i dubbelbindningen OCH deras speglingar
+                    const alkenSpegel1 = grund.c - huvudgruppPos + 1;
+                    const alkenSpegel2 = grund.c - (huvudgruppPos + 1) + 1;
+                    ledigaPositioner = ledigaPositioner.filter(p =>
+                        p !== 1 &&
+                        p !== huvudgruppPos &&
+                        p !== huvudgruppPos + 1 &&
+                        p !== alkenSpegel1 &&
+                        p !== alkenSpegel2
+                    );
                     break;
                 case 'alkyn':
                     // Enligt IUPAC: numrera från det håll som ger lägsta nummer
                     huvudgruppPos = this.slumpaTal(1, Math.ceil((grund.c - 1) / 2));
                     suffixKey = 'yn';
-                    ledigaPositioner = ledigaPositioner.filter(p => p !== 1);
+                    // Blockera båda positioner i trippelbindningen OCH deras speglingar
+                    const alkynSpegel1 = grund.c - huvudgruppPos + 1;
+                    const alkynSpegel2 = grund.c - (huvudgruppPos + 1) + 1;
+                    ledigaPositioner = ledigaPositioner.filter(p =>
+                        p !== 1 &&
+                        p !== huvudgruppPos &&
+                        p !== huvudgruppPos + 1 &&
+                        p !== alkynSpegel1 &&
+                        p !== alkynSpegel2
+                    );
                     break;
                 case 'alkohol':
                     huvudgruppPos = this.slumpaTal(1, Math.ceil(grund.c / 2));
                     suffixKey = 'ol';
-                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos && p !== 1);
+                    // Blockera både huvudgruppPos och dess speglingsposition (pga IUPAC-numrering)
+                    const alkoholSpegel = grund.c - huvudgruppPos + 1;
+                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos && p !== alkoholSpegel && p !== 1);
                     break;
                 case 'keton':
                     if (grund.c < 3) return this.genereraEttNamn(grupp); // Försök igen om kedjan är för kort
                     // Enligt IUPAC: keton kan vara på pos 2 till mitten, alltid lägsta nummer
                     huvudgruppPos = this.slumpaTal(2, Math.ceil(grund.c / 2));
                     suffixKey = 'on';
-                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos && p !== 1);
+                    // Blockera både huvudgruppPos och dess speglingsposition (pga IUPAC-numrering)
+                    const ketonSpegel = grund.c - huvudgruppPos + 1;
+                    ledigaPositioner = ledigaPositioner.filter(p => p !== huvudgruppPos && p !== ketonSpegel && p !== 1);
                     break;
                 case 'aldehyd':
                     suffixKey = 'al';
@@ -378,10 +400,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ prompt })
             });
 
-            const data = await response.json();
+            // Kontrollera om svaret är tomt
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Servern returnerade inte JSON. Kontrollera att GEMINI_API_KEY är konfigurerad i Vercel.');
+            }
 
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || 'Något gick fel');
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                throw new Error('Kunde inte läsa API-svaret. Servern kanske är ner eller API-nyckeln är inte konfigurerad.');
+            }
+
+            if (!response.ok) {
+                throw new Error(data.error || `API-fel: ${response.status} ${response.statusText}`);
+            }
+
+            if (!data.success) {
+                throw new Error(data.error || 'API-anropet misslyckades');
             }
 
             return data.text;
@@ -462,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </p>
                         <div class="gemini-text">${formatteradText}</div>
                         <div class="gemini-prompt-toggle">
-                            <button class="visa-prompt-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('Visa') ? '<i class=\\"fa-solid fa-eye-slash\\"></i> Dölj prompt' : '<i class=\\"fa-solid fa-eye\\"></i> Visa prompt';">
+                            <button class="visa-prompt-btn">
                                 <i class="fa-solid fa-eye"></i> Visa prompt
                             </button>
                             <div class="gemini-prompt-text" style="display: none;">
@@ -471,6 +508,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 `;
+
+                // Lägg till event listener för prompt-knappen
+                const promptBtn = content.querySelector('.visa-prompt-btn');
+                const promptText = content.querySelector('.gemini-prompt-text');
+
+                if (promptBtn && promptText) {
+                    promptBtn.addEventListener('click', () => {
+                        if (promptText.style.display === 'none') {
+                            promptText.style.display = 'block';
+                            promptBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Dölj prompt';
+                        } else {
+                            promptText.style.display = 'none';
+                            promptBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Visa prompt';
+                        }
+                    });
+                }
             })
             .catch(error => {
                 content.innerHTML = `
@@ -716,12 +769,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (felGissning) {
             // Om användaren gissade fel, fråga varför det korrekta namnet inte kallas för deras gissning
-            geminiPrompt = `Förklara kort (max 150 ord) varför "${svensktNamn}" INTE kallas "${felGissning}" enligt IUPAC. Fokusera på skillnaden mellan namnen. Använd Markdown-formatering (**, *, ###, listor). Svara på svenska.`;
+            geminiPrompt = `Förklara kort (max 250 ord, får gärna vara kortare) varför "${svensktNamn}" INTE kallas "${felGissning}" enligt IUPAC. Fokusera på skillnaden mellan namnen. Använd Markdown-formatering (**, *, ###, listor). Svara på svenska.`;
             länkText = `Varför kallas <i>${svensktNamn.toLowerCase()}</i> inte för <i>${felGissning.toLowerCase()}</i>?`;
             knappText = `Fråga Google Gemini varför namnet är fel`;
         } else {
             // Normal prompt för rätt svar
-            geminiPrompt = `Förklara IUPAC-namnet "${svensktNamn}" kortfattat (max 150 ord). Bryt ner: 1) Huvudkedjan, 2) Funktionell grupp, 3) Positioner/substituenter. Använd Markdown-formatering (**, *, ###, listor). Svara på svenska.`;
+            geminiPrompt = `Förklara IUPAC-namnet "${svensktNamn}" kortfattat (max 250 ord, får gärna vara kortare). Bryt ner: 1) Huvudkedjan, 2) Funktionell grupp, 3) Positioner/substituenter. Använd Markdown-formatering (**, *, ###, listor). Svara på svenska.`;
             länkText = `Förklaring av namngivningen för <i>${svensktNamn.toLowerCase()}</i>`;
             knappText = `Fråga Google Gemini om namngivningen`;
         }
