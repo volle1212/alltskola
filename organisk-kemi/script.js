@@ -330,6 +330,43 @@ document.addEventListener('DOMContentLoaded', () => {
     // GEMINI API MODAL FUNKTIONER
     // ===================================================================
 
+    // Funktion för att konvertera Markdown till HTML
+    function markdownTillHTML(text) {
+        // Escapa HTML-tecken först (förutom de vi själva lägger till)
+        let html = text;
+
+        // Konvertera ### Headers till <h3>
+        html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^# (.+)$/gm, '<h3>$1</h3>');
+
+        // Konvertera **bold** till <strong>
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+        // Konvertera *italic* till <em>
+        html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+        // Konvertera listor med - eller * till <ul><li>
+        html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+        // Konvertera numrerade listor
+        html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+
+        // Konvertera dubbla radbrytningar till paragraf
+        html = html.replace(/\n\n/g, '</p><p>');
+
+        // Konvertera enkla radbrytningar till <br>
+        html = html.replace(/\n/g, '<br>');
+
+        // Wrappa i paragraf om det inte redan finns block-element
+        if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<p')) {
+            html = '<p>' + html + '</p>';
+        }
+
+        return html;
+    }
+
     // Funktion för att anropa Gemini API
     async function anropaGeminiAPI(prompt) {
         try {
@@ -416,12 +453,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Anropa API och visa svar
         anropaGeminiAPI(prompt)
             .then(text => {
+                const formatteradText = markdownTillHTML(text);
+
                 content.innerHTML = `
                     <div class="gemini-response">
                         <p style="margin-top: 0; color: #666; font-size: 0.9rem; font-style: italic;">
                             ${länkText}
                         </p>
-                        <div class="gemini-text">${text.replace(/\n/g, '<br>')}</div>
+                        <div class="gemini-text">${formatteradText}</div>
+                        <div class="gemini-prompt-toggle">
+                            <button class="visa-prompt-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('Visa') ? '<i class=\\"fa-solid fa-eye-slash\\"></i> Dölj prompt' : '<i class=\\"fa-solid fa-eye\\"></i> Visa prompt';">
+                                <i class="fa-solid fa-eye"></i> Visa prompt
+                            </button>
+                            <div class="gemini-prompt-text" style="display: none;">
+                                ${prompt.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
                     </div>
                 `;
             })
@@ -669,12 +716,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (felGissning) {
             // Om användaren gissade fel, fråga varför det korrekta namnet inte kallas för deras gissning
-            geminiPrompt = `Varför kallas ${svensktNamn} inte för ${felGissning}? Förklara skillnaden mellan dessa namn i organisk kemi enligt IUPAC-nomenklatur. Ge ett tydligt och pedagogiskt svar på svenska.`;
+            geminiPrompt = `Förklara kort (max 150 ord) varför "${svensktNamn}" INTE kallas "${felGissning}" enligt IUPAC. Fokusera på skillnaden mellan namnen. Använd Markdown-formatering (**, *, ###, listor). Svara på svenska.`;
             länkText = `Varför kallas <i>${svensktNamn.toLowerCase()}</i> inte för <i>${felGissning.toLowerCase()}</i>?`;
             knappText = `Fråga Google Gemini varför namnet är fel`;
         } else {
             // Normal prompt för rätt svar
-            geminiPrompt = `Förklara den systematiska namngivningen av följande organiska förening enligt IUPAC: ${svensktNamn}. Bryt ner namnet i dess beståndsdelar och förklara varje del. Ge ett tydligt och pedagogiskt svar på svenska.`;
+            geminiPrompt = `Förklara IUPAC-namnet "${svensktNamn}" kortfattat (max 150 ord). Bryt ner: 1) Huvudkedjan, 2) Funktionell grupp, 3) Positioner/substituenter. Använd Markdown-formatering (**, *, ###, listor). Svara på svenska.`;
             länkText = `Förklaring av namngivningen för <i>${svensktNamn.toLowerCase()}</i>`;
             knappText = `Fråga Google Gemini om namngivningen`;
         }
