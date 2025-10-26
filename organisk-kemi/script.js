@@ -799,8 +799,18 @@ document.addEventListener('DOMContentLoaded', () => {
             länk.style.textDecoration = 'none';
             länk.style.borderRadius = '5px';
             länk.style.fontSize = '14px';
+            länk.style.cursor = 'pointer';
+            länk.style.transition = 'background-color 0.2s';
             länk.innerHTML = '<i class="fa-solid fa-external-link-alt"></i> Läs mer om ' + grupp.toLowerCase() + ' hos Magnus Ehinger';
-            
+
+            // Hover-effekter (samma som Gemini-knappen)
+            länk.addEventListener('mouseenter', () => {
+                länk.style.backgroundColor = '#0056b3';
+            });
+            länk.addEventListener('mouseleave', () => {
+                länk.style.backgroundColor = '#007bff';
+            });
+
             länkContainer.appendChild(länk);
         }
 
@@ -832,9 +842,10 @@ document.addEventListener('DOMContentLoaded', () => {
             knapp.style.borderRadius = '5px';
             knapp.style.fontSize = '14px';
             knapp.style.cursor = 'pointer';
+            knapp.style.transition = 'background-color 0.2s';
             knapp.innerHTML = '<i class="fa-solid fa-sparkles"></i> ' + knappText;
 
-            // Hover-effekter
+            // Hover-effekter (samma som Magnus Ehinger-länken)
             knapp.addEventListener('mouseenter', () => {
                 knapp.style.backgroundColor = '#0056b3';
             });
