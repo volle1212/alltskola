@@ -254,3 +254,188 @@ h1 .fa-flask-vial {
     text-align: center;
     margin-top: 0;
 }
+
+/* ===================================================================
+   GEMINI MODAL STYLING
+   =================================================================== */
+
+/* Modal overlay - halvtransparent bakgrund */
+.gemini-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Modal container */
+.gemini-modal {
+    background: white;
+    border-radius: 12px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Modal header */
+.gemini-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+    background: linear-gradient(135deg, #f7f9fc, #eef2f7);
+}
+
+.gemini-modal-header h3 {
+    color: var(--primary-action);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.gemini-modal-header h3 i {
+    color: #FFA500;
+}
+
+/* Stängningsknapp */
+.gemini-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.gemini-modal-close:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+/* Modal content */
+.gemini-modal-content {
+    padding: 2rem;
+    min-height: 200px;
+}
+
+/* Loading state */
+.gemini-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+}
+
+.gemini-loading p {
+    color: #666;
+    font-weight: 500;
+}
+
+/* Spinner animation */
+.gemini-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-action);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Response styling */
+.gemini-response {
+    line-height: 1.7;
+}
+
+.gemini-text {
+    color: #333;
+    font-size: 1rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-action);
+}
+
+/* Error styling */
+.gemini-error {
+    text-align: center;
+    padding: 2rem;
+    color: #d32f2f;
+}
+
+.gemini-error i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.gemini-error p {
+    margin: 0.5rem 0;
+}
+
+/* Responsiv design */
+@media (max-width: 768px) {
+    .gemini-modal {
+        max-height: 90vh;
+        margin: 0.5rem;
+    }
+
+    .gemini-modal-header {
+        padding: 1rem;
+    }
+
+    .gemini-modal-content {
+        padding: 1rem;
+    }
+
+    .gemini-text {
+        font-size: 0.95rem;
+    }
+}

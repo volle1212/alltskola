@@ -326,6 +326,116 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let jmolApplet = null; // Flyttad hit för att undvika ReferenceError
 
+    // ===================================================================
+    // GEMINI API MODAL FUNKTIONER
+    // ===================================================================
+
+    // Funktion för att anropa Gemini API
+    async function anropaGeminiAPI(prompt) {
+        try {
+            const response = await fetch('/api/gemini', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Något gick fel');
+            }
+
+            return data.text;
+        } catch (error) {
+            console.error('Fel vid anrop till Gemini API:', error);
+            throw error;
+        }
+    }
+
+    // Funktion för att visa modal med AI-svar
+    function visaGeminiModal(prompt, länkText) {
+        // Ta bort befintlig modal om den finns
+        const befintligModal = document.getElementById('gemini-modal-overlay');
+        if (befintligModal) {
+            befintligModal.remove();
+        }
+
+        // Skapa modal overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'gemini-modal-overlay';
+        overlay.className = 'gemini-modal-overlay';
+
+        // Skapa modal container
+        const modal = document.createElement('div');
+        modal.className = 'gemini-modal';
+
+        // Skapa header med stängningsknapp
+        const header = document.createElement('div');
+        header.className = 'gemini-modal-header';
+
+        const title = document.createElement('h3');
+        title.innerHTML = '<i class="fa-solid fa-sparkles"></i> Google Gemini';
+        title.style.margin = '0';
+        title.style.fontSize = '1.3rem';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'gemini-modal-close';
+        closeBtn.innerHTML = '<i class="fa-solid fa-times"></i>';
+        closeBtn.addEventListener('click', () => overlay.remove());
+
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+
+        // Skapa content area
+        const content = document.createElement('div');
+        content.className = 'gemini-modal-content';
+        content.innerHTML = `
+            <div class="gemini-loading">
+                <div class="gemini-spinner"></div>
+                <p>Frågar Google Gemini...</p>
+            </div>
+        `;
+
+        // Lägg ihop modal
+        modal.appendChild(header);
+        modal.appendChild(content);
+        overlay.appendChild(modal);
+
+        // Lägg till i DOM
+        document.body.appendChild(overlay);
+
+        // Stäng vid click utanför modal
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+            }
+        });
+
+        // Anropa API och visa svar
+        anropaGeminiAPI(prompt)
+            .then(text => {
+                content.innerHTML = `
+                    <div class="gemini-response">
+                        <p style="margin-top: 0; color: #666; font-size: 0.9rem; font-style: italic;">
+                            ${länkText}
+                        </p>
+                        <div class="gemini-text">${text.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                content.innerHTML = `
+                    <div class="gemini-error">
+                        <i class="fa-solid fa-exclamation-triangle"></i>
+                        <p><strong>Kunde inte få svar från AI</strong></p>
+                        <p style="font-size: 0.9rem; color: #666;">${error.message || 'Försök igen senare.'}</p>
+                    </div>
+                `;
+            });
+    }
+
     const namnDisplay = document.getElementById('kemiskt-namn');
     const generateBtn = document.getElementById('generate-btn');
     const visaNamnBtn = document.getElementById('visa-namn-btn');
@@ -552,34 +662,50 @@ document.addEventListener('DOMContentLoaded', () => {
             länkContainer.appendChild(länk);
         }
 
-        // Lägg till ChatGPT-länk
-        let chatgptLänk;
+        // Lägg till Google Gemini-knapp
+        let geminiPrompt;
         let länkText;
-        
+        let knappText;
+
         if (felGissning) {
             // Om användaren gissade fel, fråga varför det korrekta namnet inte kallas för deras gissning
-            chatgptLänk = `https://chat.openai.com/?q=Varför%20kallas%20${encodeURIComponent(svensktNamn)}%20inte%20för%20${encodeURIComponent(felGissning)}?%20Förklara%20skillnaden%20mellan%20dessa%20namn%20i%20organisk%20kemi.`;
-            länkText = `Fråga ChatGPT varför <i>${svensktNamn.toLowerCase()}</i> inte kallas för <i>${felGissning.toLowerCase()}</i>`;
+            geminiPrompt = `Varför kallas ${svensktNamn} inte för ${felGissning}? Förklara skillnaden mellan dessa namn i organisk kemi enligt IUPAC-nomenklatur. Ge ett tydligt och pedagogiskt svar på svenska.`;
+            länkText = `Varför kallas <i>${svensktNamn.toLowerCase()}</i> inte för <i>${felGissning.toLowerCase()}</i>?`;
+            knappText = `Fråga Google Gemini varför namnet är fel`;
         } else {
-            // Normal länk för rätt svar
-            chatgptLänk = `https://chat.openai.com/?q=Förklara%20den%20systematiska%20namngivningen%20av%20följande%20organiska%20förening,%20enligt%20IUPAC:%20${encodeURIComponent(svensktNamn)}`;
-            länkText = `Fråga ChatGPT om namngivningen för <i>${svensktNamn.toLowerCase()}</i>`;
+            // Normal prompt för rätt svar
+            geminiPrompt = `Förklara den systematiska namngivningen av följande organiska förening enligt IUPAC: ${svensktNamn}. Bryt ner namnet i dess beståndsdelar och förklara varje del. Ge ett tydligt och pedagogiskt svar på svenska.`;
+            länkText = `Förklaring av namngivningen för <i>${svensktNamn.toLowerCase()}</i>`;
+            knappText = `Fråga Google Gemini om namngivningen`;
         }
-        
-        if (chatgptLänk) {
-            const länk = document.createElement('a');
-            länk.href = chatgptLänk;
-            länk.target = '_blank';
-            länk.style.display = 'inline-block';
-            länk.style.padding = '8px 16px';
-            länk.style.backgroundColor = '#007bff';
-            länk.style.color = 'white';
-            länk.style.textDecoration = 'none';
-            länk.style.borderRadius = '5px';
-            länk.style.fontSize = '14px';
-            länk.innerHTML = '<i class="fa-solid fa-comment"></i> ' + länkText;
-            
-            länkContainer.appendChild(länk);
+
+        if (geminiPrompt) {
+            const knapp = document.createElement('button');
+            knapp.type = 'button';
+            knapp.style.display = 'inline-block';
+            knapp.style.padding = '8px 16px';
+            knapp.style.backgroundColor = '#007bff';
+            knapp.style.color = 'white';
+            knapp.style.border = 'none';
+            knapp.style.borderRadius = '5px';
+            knapp.style.fontSize = '14px';
+            knapp.style.cursor = 'pointer';
+            knapp.innerHTML = '<i class="fa-solid fa-sparkles"></i> ' + knappText;
+
+            // Hover-effekter
+            knapp.addEventListener('mouseenter', () => {
+                knapp.style.backgroundColor = '#0056b3';
+            });
+            knapp.addEventListener('mouseleave', () => {
+                knapp.style.backgroundColor = '#007bff';
+            });
+
+            // Öppna modal när man klickar
+            knapp.addEventListener('click', () => {
+                visaGeminiModal(geminiPrompt, länkText);
+            });
+
+            länkContainer.appendChild(knapp);
         }
         
         // Lägg till container efter namnDisplay
