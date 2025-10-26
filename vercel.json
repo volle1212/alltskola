@@ -1,0 +1,15 @@
+{
+  "buildCommand": null,
+  "framework": null,
+  "devCommand": null,
+  "installCommand": "npm install",
+  "outputDirectory": ".",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    }
+  ]
+}
