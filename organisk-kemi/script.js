@@ -797,8 +797,11 @@ document.addEventListener('DOMContentLoaded', () => {
             länk.style.backgroundColor = '#007bff';
             länk.style.color = 'white';
             länk.style.textDecoration = 'none';
+            länk.style.border = 'none';
             länk.style.borderRadius = '5px';
             länk.style.fontSize = '14px';
+            länk.style.fontFamily = "'Poppins', sans-serif";
+            länk.style.fontWeight = 'normal';
             länk.style.cursor = 'pointer';
             länk.style.transition = 'background-color 0.2s';
             länk.innerHTML = '<i class="fa-solid fa-external-link-alt"></i> Läs mer om ' + grupp.toLowerCase() + ' hos Magnus Ehinger';
@@ -838,12 +841,15 @@ document.addEventListener('DOMContentLoaded', () => {
             knapp.style.padding = '8px 16px';
             knapp.style.backgroundColor = '#007bff';
             knapp.style.color = 'white';
+            knapp.style.textDecoration = 'none';
             knapp.style.border = 'none';
             knapp.style.borderRadius = '5px';
             knapp.style.fontSize = '14px';
+            knapp.style.fontFamily = "'Poppins', sans-serif";
+            knapp.style.fontWeight = 'normal';
             knapp.style.cursor = 'pointer';
             knapp.style.transition = 'background-color 0.2s';
-            knapp.innerHTML = '<i class="fa-solid fa-sparkles"></i> ' + knappText;
+            knapp.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> ' + knappText;
 
             // Hover-effekter (samma som Magnus Ehinger-länken)
             knapp.addEventListener('mouseenter', () => {
