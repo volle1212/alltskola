@@ -108,3 +108,7 @@ body {
 .back-link:hover {
     text-decoration: underline;
 }
+
+.inline-icon {
+    margin-right: 0.5rem;
+}

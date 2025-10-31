@@ -804,7 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
             länk.style.fontWeight = 'normal';
             länk.style.cursor = 'pointer';
             länk.style.transition = 'background-color 0.2s';
-            länk.innerHTML = '<i class="fa-solid fa-external-link-alt"></i> Läs mer om ' + grupp.toLowerCase() + ' hos Magnus Ehinger';
+            länk.innerHTML = '<i class="fa-solid fa-external-link-alt inline-icon"></i> Läs mer om ' + grupp.toLowerCase() + ' hos Magnus Ehinger';
 
             // Hover-effekter (samma som Gemini-knappen)
             länk.addEventListener('mouseenter', () => {
@@ -849,7 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
             knapp.style.fontWeight = 'normal';
             knapp.style.cursor = 'pointer';
             knapp.style.transition = 'background-color 0.2s';
-            knapp.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> ' + knappText;
+            knapp.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles inline-icon"></i> ' + knappText;
 
             // Hover-effekter (samma som Magnus Ehinger-länken)
             knapp.addEventListener('mouseenter', () => {
