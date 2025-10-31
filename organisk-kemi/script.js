@@ -348,6 +348,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let jmolApplet = null; // Flyttad hit för att undvika ReferenceError
 
+    // Konfetti-funktion
+    function triggarKonfetti() {
+        // Huvudkonfetti från centrum
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+
+        // Extra konfetti från sidorna för mer dramatisk effekt
+        setTimeout(() => {
+            confetti({
+                particleCount: 50,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 }
+            });
+            confetti({
+                particleCount: 50,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 }
+            });
+        }, 150);
+    }
+
     // ===================================================================
     // GEMINI API MODAL FUNKTIONER
     // ===================================================================
@@ -716,47 +742,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const normaliseratKorrekt = korrektNamn.toLowerCase().replace(/\s+/g, ' ').trim();
         
         if (normaliseradGissning === normaliseratKorrekt) {
-            // Rätt svar!
-            feedbackContainer.innerHTML = `
-                <div style="background-color: #e8f5e9; border: 2px solid #4caf50; border-radius: 8px; padding: 1rem; text-align: center;">
-                    <p style="color: #2e7d32; font-weight: 700; font-size: 1.2rem; margin: 0;">
-                        <i class="fa-solid fa-check-circle"></i> Rätt svar!
-                    </p>
-                </div>
-            `;
-            
-            // Visa svensk namnet i huvuddisplayen också
+            // Rätt svar! - visa i gissa-knappen istället
+
+            // Trigga konfetti!
+            triggarKonfetti();
+
+            // Visa svensk namnet i huvuddisplayen
             namnDisplay.textContent = korrektNamn;
-            
-            // Inaktivera input och visa "Visa svenska namn"-knappen
-            gissningInput.disabled = true;
+
+            // Ändra gissa-knappen till att visa "Rätt svar!" och gör den grön
+            gissaBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Rätt svar!';
+            gissaBtn.style.backgroundColor = '#4caf50';
+            gissaBtn.style.color = 'white';
             gissaBtn.disabled = true;
+
+            // Inaktivera input och dölj "Visa svenska namn"-knappen
+            gissningInput.disabled = true;
             visaNamnBtn.style.display = 'none';
-            
+
+            // Rensa feedback-container (ingen separat ruta ska visas)
+            feedbackContainer.innerHTML = '';
+
             // Visa länkarna direkt efter rätt svar
             visaLänkar(namnDisplay.dataset.grupp, korrektNamn);
         } else {
-            // Fel svar - visa det korrekta svaret
-            feedbackContainer.innerHTML = `
-                <div style="background-color: #ffebee; border: 2px solid #f44336; border-radius: 8px; padding: 1rem; text-align: center;">
-                    <p style="color: #c62828; font-weight: 700; margin: 0 0 0.5rem 0;">
-                        <i class="fa-solid fa-times-circle"></i> Du hade fel!
-                    </p>
-                    <p style="color: #c62828; margin: 0; font-size: 0.9rem;">
-                        Din gissning: <strong>${gissning}</strong>
-                    </p>
-                </div>
-            `;
-            
+            // Fel svar - visa i gissa-knappen istället
+
             // Visa svenska namnet i huvuddisplayen
             namnDisplay.textContent = korrektNamn;
-            
-            // Inaktivera input och gissningsknapp
-            gissningInput.disabled = true;
+
+            // Ändra gissa-knappen till att visa "Du hade fel!" och gör den röd
+            gissaBtn.innerHTML = '<i class="fa-solid fa-times-circle"></i> Du hade fel!';
+            gissaBtn.style.backgroundColor = '#f44336';
+            gissaBtn.style.borderColor = '#f44336';
+            gissaBtn.style.color = 'white';
             gissaBtn.disabled = true;
+
+            // Inaktivera input och dölj "Visa svenska namn"-knappen
+            gissningInput.disabled = true;
             visaNamnBtn.style.display = 'none';
-            
-            // Visa länkarna med modifierad ChatGPT-länk
+
+            // Rensa feedback-container (ingen separat ruta ska visas)
+            feedbackContainer.innerHTML = '';
+
+            // Visa länkarna med modifierad Gemini-länk
             visaLänkar(namnDisplay.dataset.grupp, korrektNamn, gissning);
         }
     });
