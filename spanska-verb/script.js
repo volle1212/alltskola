@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkBtn = document.getElementById('check-btn');
     const nextBtn = document.getElementById('next-btn');
     const checkboxes = document.querySelectorAll('.tempus-val input[type="checkbox"]');
-    // NYTT: Hämta den nya checkboxen
     const showStemCheckbox = document.getElementById('show-stem');
 
     const inputFields = {
@@ -34,14 +33,15 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     let currentCorrectAnswers = {};
-    // NYTT: Variabel för att spara den nuvarande verbstammen
     let currentStem = '';
+    // NYTT: Vi sparar vilket tempus som är aktivt
+    let currentTense = '';
 
     function getConjugations(verb, tense) {
         const stem = verb.slice(0, -2);
         const ending = verb.slice(-2);
         let conjugations = {};
-        // (Resten av funktionen är oförändrad...)
+
         switch (tense) {
             case 'Presens':
                 if (ending === 'ar') { conjugations = { yo: stem + 'o', tu: stem + 'as', el: stem + 'a', nosotros: stem + 'amos', vosotros: stem + 'áis', ellos: stem + 'an' }; } 
@@ -56,36 +56,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (ending === 'ar') { conjugations = { yo: stem + 'aba', tu: stem + 'abas', el: stem + 'aba', nosotros: stem + 'ábamos', vosotros: stem + 'abais', ellos: stem + 'aban' }; }
                 else if (ending === 'er' || ending === 'ir') { conjugations = { yo: stem + 'ía', tu: stem + 'ías', el: stem + 'ía', nosotros: stem + 'íamos', vosotros: stem + 'íais', ellos: stem + 'ían' }; }
                 break;
+            // NYTT: Regler för Imperativ (Affirmativ)
+            case 'Imperativ':
+                // Notera: Yo-formen finns ej. Vi sätter '-' som rätt svar.
+                // El/Ella/Usted = Artig uppmaning (Hable/Coma/Viva)
+                // Ellos/Ellas/Ustedes = Artig uppmaning plural (Hablen/Coman/Vivan)
+                if (ending === 'ar') { 
+                    conjugations = { yo: '-', tu: stem + 'a', el: stem + 'e', nosotros: stem + 'emos', vosotros: stem + 'ad', ellos: stem + 'en' }; 
+                }
+                else if (ending === 'er') { 
+                    conjugations = { yo: '-', tu: stem + 'e', el: stem + 'a', nosotros: stem + 'amos', vosotros: stem + 'ed', ellos: stem + 'an' }; 
+                }
+                else if (ending === 'ir') { 
+                    conjugations = { yo: '-', tu: stem + 'e', el: stem + 'a', nosotros: stem + 'amos', vosotros: stem + 'id', ellos: stem + 'an' }; 
+                }
+                break;
         }
         return conjugations;
     }
 
     function startNewRound() {
         const selectedTenses = Array.from(checkboxes)
-            .filter(cb => cb.checked && cb.id !== 'show-stem') // Ignorera den nya checkboxen här
+            .filter(cb => cb.checked && cb.id !== 'show-stem')
             .map(cb => cb.value);
 
         if (selectedTenses.length === 0) {
             uppgiftTextEl.textContent = "Välj minst ett tempus för att börja öva.";
-            currentStem = ''; // Rensa stammen om inget är valt
+            currentStem = '';
             return;
         }
         
         const randomVerb = verbs[Math.floor(Math.random() * verbs.length)];
-        // UPPDATERAD: Spara stammen globalt
         currentStem = randomVerb.slice(0, -2); 
         
+        // Välj ett slumpmässigt tempus
+        currentTense = selectedTenses[Math.floor(Math.random() * selectedTenses.length)];
+
+        uppgiftTextEl.textContent = `Böj verbet "${randomVerb}" i ${currentTense}.`;
+        currentCorrectAnswers = getConjugations(randomVerb, currentTense);
+
         pronouns.forEach(pronoun => {
-            // UPPDATERAD: Fyll i stam om checkboxen är ikryssad, annars töm fältet.
-            inputFields[pronoun].value = showStemCheckbox.checked ? currentStem : '';
+            // Återställ fält
             inputFields[pronoun].style.borderColor = '';
+            inputFields[pronoun].disabled = false; // Aktivera alla fält som standard
             feedbackIcons[pronoun].className = 'feedback-icon'; 
+            
+            // NYTT: Specialhantering för Imperativ
+            if (currentTense === 'Imperativ' && pronoun === 'yo') {
+                inputFields[pronoun].value = '-';
+                inputFields[pronoun].disabled = true; // Lås fältet
+                inputFields[pronoun].style.backgroundColor = '#f0f0f0'; // Visuell indikation
+            } else {
+                // Fyll i stam om checkboxen är ikryssad
+                inputFields[pronoun].value = showStemCheckbox.checked ? currentStem : '';
+                inputFields[pronoun].style.backgroundColor = ''; // Återställ bakgrund
+            }
         });
-
-        const randomTense = selectedTenses[Math.floor(Math.random() * selectedTenses.length)];
-
-        uppgiftTextEl.textContent = `Böj verbet "${randomVerb}" i ${randomTense}.`;
-        currentCorrectAnswers = getConjugations(randomVerb, randomTense);
     }
 
     function removeAccents(str) {
@@ -109,7 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedbackIcons[pronoun].classList.add('fa-solid', 'fa-circle-xmark', 'show');
                 inputFields[pronoun].style.borderColor = 'var(--error)';
 
-                if (correctAnswer && removeAccents(correctAnswer) === userAnswer) {
+                // Visa inte ledtråd för "Yo" i imperativ (där svaret är "-")
+                if (correctAnswer && removeAccents(correctAnswer) === userAnswer && correctAnswer !== '-') {
                     hints.push(`Kom ihåg accenten för "${pronoun}": ${correctAnswer}`);
                 }
             }
@@ -122,20 +149,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // NYTT: Funktion som körs när man klickar i/ur "Visa verbstam"-rutan
     function handleShowStemToggle() {
-        if (!currentStem) return; // Gör inget om inget verb är aktivt
+        if (!currentStem) return;
 
         const isChecked = showStemCheckbox.checked;
         pronouns.forEach(pronoun => {
+            // NYTT: Hoppa över 'yo' om vi kör Imperativ
+            if (currentTense === 'Imperativ' && pronoun === 'yo') return;
+
             const currentVal = inputFields[pronoun].value;
 
             if (isChecked) {
-                // Fyll i stammen. Detta skriver över tomma fält.
                 inputFields[pronoun].value = currentStem;
             } else {
-                // Om rutan avbockas, ta bara bort stammen om det är det *enda* som står i fältet.
-                // Detta förhindrar att ett påbörjat svar raderas.
                 if (currentVal === currentStem) {
                     inputFields[pronoun].value = '';
                 }
@@ -147,12 +173,11 @@ document.addEventListener('DOMContentLoaded', () => {
     checkBtn.addEventListener('click', checkAnswers);
     nextBtn.addEventListener('click', startNewRound);
     checkboxes.forEach(cb => {
-        if (cb.id !== 'show-stem') { // Lyssna bara på tempus-rutorna för att starta ny runda
+        if (cb.id !== 'show-stem') {
             cb.addEventListener('change', startNewRound);
         }
     });
 
-    // NYTT: Lägg till en event listener för den nya checkboxen
     showStemCheckbox.addEventListener('change', handleShowStemToggle);
 
     startNewRound();
