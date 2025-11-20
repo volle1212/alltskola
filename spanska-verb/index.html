@@ -23,34 +23,67 @@
     <div class="container">
         <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Tillbaka till startsidan</a>
         <h1><i class="fa-solid fa-book-open-reader"></i> Spanska Verbträning</h1>
-        <p>Välj tempus nedan och fyll i rätt böjningar.</p>
+        <p>Välj inställningar nedan och fyll i rätt böjningar.</p>
 
         <fieldset class="tempus-val">
-            <legend>Välj tempus</legend>
-            <div class="checkbox-grupp">
-                <input type="checkbox" id="presens" value="Presens" checked>
-                <label for="presens">Presens</label>
+            <legend>Inställningar</legend>
+            
+            <div class="settings-group">
+                <div class="settings-section">
+                    <h4>Välj Tempus</h4>
+                    <div class="checkbox-container">
+                        <div class="checkbox-grupp">
+                            <input type="checkbox" id="presens" value="Presens" checked>
+                            <label for="presens">Presens</label>
+                        </div>
+                        <div class="checkbox-grupp">
+                            <input type="checkbox" id="preteritum" value="Preteritum" checked>
+                            <label for="preteritum">Preteritum</label>
+                        </div>
+                        <div class="checkbox-grupp">
+                            <input type="checkbox" id="imperfekt" value="Imperfekt" checked>
+                            <label for="imperfekt">Imperfekt</label>
+                        </div>
+                        <div class="checkbox-grupp">
+                            <input type="checkbox" id="imperativ" value="Imperativ" checked>
+                            <label for="imperativ">Imperativ</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="settings-section">
+                    <h4>Välj Verbtyper</h4>
+                    <div class="checkbox-container">
+                        <div class="checkbox-grupp">
+                            <input type="checkbox" id="type-regular" checked>
+                            <label for="type-regular">Regelbundna</label>
+                        </div>
+                        <div class="checkbox-grupp highlight-option">
+                            <input type="checkbox" id="type-irregular">
+                            <label for="type-irregular">Oregelbundna</label>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="checkbox-grupp">
-                <input type="checkbox" id="preteritum" value="Preteritum" checked>
-                <label for="preteritum">Preteritum</label>
-            </div>
-            <div class="checkbox-grupp">
-                <input type="checkbox" id="imperfekt" value="Imperfekt" checked>
-                <label for="imperfekt">Imperfekt</label>
-            </div>
-            <div class="checkbox-grupp">
-                <input type="checkbox" id="imperativ" value="Imperativ" checked>
-                <label for="imperativ">Imperativ</label>
-            </div>
-            <div class="checkbox-grupp show-stem">
-                <input type="checkbox" id="show-stem">
-                <label for="show-stem">Visa verbstam</label>
+
+            <div class="separator-horizontal"></div>
+
+            <div class="settings-section single-option">
+                <div class="checkbox-grupp">
+                    <input type="checkbox" id="show-stem">
+                    <label for="show-stem">Visa verbstam (hjälp)</label>
+                </div>
             </div>
         </fieldset>
 
         <div class="uppgift-container">
             <h2 id="uppgift-text">Laddar verb...</h2>
+
+            <a id="babla-link" href="#" target="_blank" rel="noopener noreferrer" class="verb-link">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Se fullständig böjning på bab.la
+            </a>
         </div>
 
         <div class="boejningar-grid">

@@ -216,3 +216,91 @@ button:hover {
         font-size: 1.5rem;
     }
 }
+
+/* Lägg till detta i slutet av din CSS-fil */
+
+.verb-link {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--text-secondary); /* Diskret understrykning */
+    padding-bottom: 2px;
+    transition: all 0.2s ease;
+}
+
+.verb-link:hover {
+    color: var(--primary-action);
+    border-bottom-color: var(--primary-action);
+    transform: translateY(-1px);
+}
+
+.verb-link i {
+    font-size: 0.8rem;
+    margin-right: 0.25rem;
+}
+
+/* Uppdatera .settings-group och .separator-horizontal i din CSS */
+
+.settings-group {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    text-align: left;
+    width: 100%;
+}
+
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    /* Ta bort ev fast width om den fanns */
+}
+
+.settings-section h4 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.separator-horizontal {
+    height: 1px;
+    background-color: var(--border-color);
+    width: 100%;
+    margin: 1.5rem 0;
+}
+
+.single-option {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Justera checkbox-containern för att linjera snyggt */
+.checkbox-container {
+    display: flex;
+    flex-direction: column; /* Stapla valen under rubriken */
+    gap: 0.8rem; 
+}
+
+.highlight-option label {
+    color: #d35400; /* En orange ton för att markera att dessa är svårare */
+    font-weight: 700;
+}
+
+/* Responsivt för små skärmar */
+@media (max-width: 600px) {
+    .settings-group {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .checkbox-container {
+        align-items: center; /* Centrera på mobil */
+    }
+}
